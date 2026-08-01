@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlitchLabz Enigma Engine</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            dark: {
+              950: '#030712',
+              900: '#0b0f19',
+              800: '#111827',
+              700: '#1f2937',
+            },
+            cyan: {
+              50: '#ecfeff',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              700: '#0e7490',
+              800: '#155e75',
+              950: '#083344',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #030712;
+      color: #f3f4f6;
+    }
+    .glass {
+      background: rgba(11, 15, 25, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .glow-border {
+      transition: all 0.3s ease;
+    }
+    .glow-border:hover {
+      border-color: rgba(34, 211, 238, 0.4);
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
+    }
+    .terminal-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .terminal-scroll::-webkit-scrollbar-track {
+      background: #030712;
+    }
+    .terminal-scroll::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 3px;
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .pulse-badge {
+      animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col overflow-hidden">
+  <!-- Header -->
+  <header class="glass border-b border-white/5 py-4 px-6 flex justify-between items-center z-10">
+    <div class="flex items-center gap-3">
+      <div class="h-3 w-3 bg-cyan-400 rounded-full shadow-[0_0_8px_#22d3ee] animate-pulse"></div>
+      <h1 class="text-xl font-bold tracking-wider uppercase text-cyan-400 font-mono">GlitchLabz Enigma Engine</h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <button 
+        onclick="openSettingsModal()" 
+        class="text-gray-400 hover:text-white transition p-1.5 hover:bg-white/5 rounded-lg font-mono text-xs flex items-center gap-2"
+        title="Configurar APIs"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 animate-[spin_8s_linear_infinite]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Configurar APIs
+      </button>
+      <div class="text-xs text-gray-500 font-mono hidden sm:block">v1.2.0 • Multi-Agent Control</div>
+    </div>
+  </header>
+
+  <!-- Main Content Grid -->
+  <main class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 p-6 gap-6">
+    <!-- Left Column: Idea Generator & Inputs (7 cols) -->
+    <section class="lg:col-span-7 flex flex-col gap-6 overflow-hidden">
+      <!-- Custom Topic Form -->
+      <div class="glass rounded-xl p-5 shrink-0">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3 font-mono">Lanzar Enigma Personalizado</h2>
+        <div class="flex gap-3">
+          <input 
+            type="text" 
+            id="custom-topic" 
+            placeholder="Ej. Petscop, Polybius, Cicada 3301 o leyendas de la deep web..." 
+            class="flex-1 bg-dark-950/80 border border-white/10 rounded-lg px-4 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+          >
+          <button 
+            onclick="executeTopicFromInput()" 
+            id="btn-lanzar"
+            class="bg-cyan-700 hover:bg-cyan-600 text-white font-semibold text-sm px-5 py-2 rounded-lg transition duration-200 shadow-md font-mono flex items-center gap-2"
+          >
+            Lanzar Video
+          </button>
+        </div>
+        <div class="flex items-center gap-2 mt-3 pl-1">
+          <input 
+            type="checkbox" 
+            id="burn-subtitles" 
+            class="rounded border-white/10 bg-dark-950 text-cyan-500 focus:ring-0 focus:ring-offset-0 h-4 w-4"
+            checked
+          >
+          <label for="burn-subtitles" class="text-xs text-gray-400 font-mono select-none cursor-pointer hover:text-gray-300">Quemar subtítulos automáticos en el video</label>
+        </div>
+      </div>
+
+      <!-- Idea Generator Grid -->
+      <div class="glass rounded-xl p-5 flex-1 flex flex-col overflow-hidden">
+        <!-- Tab Bar -->
+        <div class="flex border-b border-white/10 mb-4 shrink-0 justify-between items-center">
+          <div class="flex gap-4">
+            <button 
+              id="tab-btn-generator"
+              onclick="switchIdeasTab('generator')"
+              class="border-b-2 border-cyan-400 text-cyan-400 text-sm font-semibold uppercase tracking-wider font-mono pb-2 px-1 focus:outline-none transition duration-200"
+            >
+              Generar Ideas
+            </button>
+            <button 
+              id="tab-btn-memory"
+              onclick="switchIdeasTab('memory')"
+              class="border-b-2 border-transparent text-gray-400 hover:text-gray-200 text-sm font-semibold uppercase tracking-wider font-mono pb-2 px-1 focus:outline-none transition duration-200"
+            >
+              Memoria de Ideas
+            </button>
+          </div>
+          
+          <!-- Tab Actions -->
+          <div class="pb-2">
+            <!-- Generator Actions -->
+            <div id="generator-actions" class="flex items-center">
+              <button 
+                onclick="generateIdeas()" 
+                id="btn-ideas"
+                class="border border-cyan-500/20 hover:border-cyan-500/50 hover:bg-cyan-950/20 text-cyan-400 text-xs font-semibold px-4 py-1.5 rounded-lg transition duration-200 font-mono flex items-center gap-2"
+              >
+                <span id="ideas-loader" class="hidden animate-spin">&#9696;</span>
+                Generar Ideas (API)
+              </button>
+            </div>
+            <!-- Memory Actions -->
+            <div id="memory-actions" class="hidden flex items-center gap-2">
+              <button 
+                onclick="clearIdeasMemory()" 
+                id="btn-clear-memory"
+                class="border border-red-500/20 hover:border-red-500/50 hover:bg-red-950/20 text-red-400 text-xs font-semibold px-4 py-1.5 rounded-lg transition duration-200 font-mono flex items-center gap-2"
+              >
+                Vaciar Memoria
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 1 Container: Generator -->
+        <div id="ideas-generator-view" class="flex-1 flex flex-col overflow-hidden">
+          <div class="mb-3 shrink-0">
+            <p class="text-xs text-gray-500">Propuestas generadas mediante inteligencia artificial (consume API).</p>
+          </div>
+          <!-- Ideas List / Grid -->
+          <div class="flex-1 overflow-y-auto pr-1 space-y-4 terminal-scroll" id="ideas-container">
+            <div class="h-full flex flex-col items-center justify-center text-gray-500 py-10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <p class="text-sm">Presiona "Generar Ideas (API)" para proponer nuevos temas.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2 Container: Memory -->
+        <div id="ideas-memory-view" class="hidden flex-1 flex flex-col overflow-hidden">
+          <div class="mb-3 shrink-0">
+            <p class="text-xs text-gray-500">Historial de ideas almacenadas localmente en la base de datos (no consume API).</p>
+          </div>
+          <!-- Memory List -->
+          <div class="flex-1 overflow-y-auto pr-1 space-y-4 terminal-scroll" id="memory-container">
+            <div class="h-full flex flex-col items-center justify-center text-gray-500 py-10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+              </svg>
+              <p class="text-sm">No hay ideas guardadas en la memoria local aún.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Console & History (5 cols) -->
+    <section class="lg:col-span-5 flex flex-col gap-6 overflow-hidden">
+      <!-- Live Console -->
+      <div class="glass rounded-xl p-5 flex-1 flex flex-col overflow-hidden">
+        <div class="flex justify-between items-center mb-3 shrink-0">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 font-mono flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-yellow-500 inline-block pulse-badge" id="terminal-pulse"></span>
+            Terminal en Vivo
+          </h2>
+          <button 
+            onclick="clearTerminal()" 
+            class="text-[10px] text-gray-500 hover:text-gray-300 uppercase tracking-widest font-mono"
+          >
+            Limpiar
+          </button>
+        </div>
+        <!-- Terminal Body -->
+        <div 
+          id="terminal" 
+          class="flex-1 bg-black/95 rounded-lg p-4 font-mono text-xs text-green-400 overflow-y-auto terminal-scroll leading-relaxed"
+        >
+          <div class="text-gray-500">// Consola de ejecución en espera. Selecciona o escribe un tema para comenzar.</div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="glass rounded-xl p-5 h-[240px] flex flex-col overflow-hidden shrink-0">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-3 font-mono">Temas ya Trabajados</h2>
+        <div class="flex-1 overflow-y-auto terminal-scroll pr-1" id="history-container">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-white/5 text-gray-500 font-mono">
+                <th class="pb-2 font-medium">Tema</th>
+                <th class="pb-2 font-medium">Fecha</th>
+                <th class="pb-2 font-medium text-right">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body" class="divide-y divide-white/5 text-gray-300">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings Modal (Glassmorphism) -->
+  <div id="settings-modal" class="fixed inset-0 bg-black/75 flex items-center justify-center z-50 hidden p-4">
+    <div class="glass w-full max-w-2xl rounded-xl p-6 flex flex-col max-h-[90vh] overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-white/10 pb-4 shrink-0">
+        <h3 class="text-lg font-bold text-cyan-400 font-mono uppercase tracking-wider flex items-center gap-2">
+          Configuración de APIs del Sistema
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white text-xl font-bold font-mono">&times;</button>
+      </div>
+
+      <!-- Modal Body (Form fields) -->
+      <div class="flex-1 overflow-y-auto space-y-4 py-4 pr-1 terminal-scroll">
+        <!-- OpenRouter Settings -->
+        <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
+          <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase mb-3">1. Agente Redactor (OpenRouter)</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">OpenRouter API Key</label>
+              <input type="password" id="cfg-openrouter-key" placeholder="En blanco para simulación o usar NVIDIA" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">OpenRouter Model</label>
+              <input type="text" id="cfg-openrouter-model" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- NVIDIA Settings -->
+        <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
+          <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase mb-3">2. Agente de Prompts (NVIDIA Cloud)</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA API Key</label>
+              <input type="password" id="cfg-nvidia-key" placeholder="En blanco para simulación o usar OpenRouter" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Model</label>
+              <input type="text" id="cfg-nvidia-model" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- ElevenLabs Settings -->
+        <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
+          <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase mb-3">3. Audio Narrador (ElevenLabs)</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">ElevenLabs API Key</label>
+              <input type="password" id="cfg-elevenlabs-key" placeholder="En blanco para audio simulado" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">Voice ID (Voz en Off)</label>
+              <input type="text" id="cfg-elevenlabs-voice" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- NVIDIA Image Settings -->
+        <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
+          <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase mb-3">4. Generación Visual (NVIDIA Cloud API)</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Image API Key</label>
+              <input type="password" id="cfg-nvidia-image-key" placeholder="En blanco para simulación o usar NVIDIA general" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Image Model</label>
+              <input type="text" id="cfg-nvidia-image-model" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="border-t border-white/10 pt-4 flex justify-end gap-3 shrink-0">
+        <button onclick="closeSettingsModal()" class="border border-white/10 hover:bg-white/5 text-gray-300 px-4 py-2 rounded text-xs font-mono">Cancelar</button>
+        <button onclick="saveSettings()" class="bg-cyan-700 hover:bg-cyan-600 text-white px-4 py-2 rounded text-xs font-mono font-bold">Guardar Ajustes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Review & Edit Modal -->
+  <div id="script-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center z-40 hidden p-4">
+    <div class="glass w-full max-w-3xl rounded-xl p-6 flex flex-col h-[80vh]">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-white/10 pb-4 shrink-0">
+        <div>
+          <h3 class="text-lg font-bold text-cyan-400 font-mono uppercase tracking-wider flex items-center gap-2">
+            Revisar y Editar Guion
+          </h3>
+          <p class="text-xs text-gray-400 mt-1" id="script-modal-topic">Tema: ...</p>
+        </div>
+        <button onclick="closeScriptModal()" class="text-gray-400 hover:text-white text-xl font-bold font-mono">&times;</button>
+      </div>
+      <!-- Modal Body (Editable Textarea) -->
+      <div class="flex-1 py-4 flex flex-col min-h-0">
+        <label class="block text-xs font-semibold text-gray-400 font-mono uppercase mb-2">Contenido del Guion (Edita libremente):</label>
+        <textarea 
+          id="script-textarea" 
+          class="flex-1 w-full bg-dark-950/90 border border-white/10 rounded-lg p-4 text-sm text-gray-200 focus:outline-none focus:border-cyan-500/50 resize-none font-sans leading-relaxed terminal-scroll"
+        ></textarea>
+      </div>
+      <!-- Modal Footer -->
+      <div class="border-t border-white/10 pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+        <span class="text-[10px] text-gray-500 font-mono">Consejo: Mantén oraciones cortas y narración en segunda persona ("tú").</span>
+        <div class="flex gap-3 w-full sm:w-auto justify-end">
+          <button onclick="closeScriptModal()" class="border border-white/10 hover:bg-white/5 text-gray-300 px-4 py-2 rounded text-xs font-mono">Cancelar</button>
+          <button onclick="confirmAndLaunch()" id="btn-confirm-launch" class="bg-cyan-700 hover:bg-cyan-600 text-white px-5 py-2 rounded text-xs font-mono font-bold flex items-center gap-2">
+            <span id="launch-loader" class="hidden animate-spin">&#9696;</span>
+            Confirmar y Producir Video
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load existing history on startup
+    window.onload = function() {
+      fetchHistory();
+    };
+
+    async function openSettingsModal() {
+      try {
+        const response = await fetch('/api/config');
+        if (!response.ok) throw new Error('No se pudo obtener la configuración');
+        const cfg = await response.json();
+        
+        // Populate inputs
+        document.getElementById('cfg-openrouter-key').value = cfg.OPENROUTER_API_KEY;
+        document.getElementById('cfg-openrouter-model').value = cfg.OPENROUTER_MODEL;
+        document.getElementById('cfg-nvidia-key').value = cfg.NVIDIA_API_KEY;
+        document.getElementById('cfg-nvidia-model').value = cfg.NVIDIA_MODEL;
+        document.getElementById('cfg-elevenlabs-key').value = cfg.ELEVENLABS_API_KEY;
+        document.getElementById('cfg-elevenlabs-voice').value = cfg.ELEVENLABS_VOICE_ID;
+        document.getElementById('cfg-nvidia-image-key').value = cfg.NVIDIA_IMAGE_KEY;
+        document.getElementById('cfg-nvidia-image-model').value = cfg.NVIDIA_IMAGE_MODEL;
+        
+        // Set placeholders for saved keys
+        if (cfg.OPENROUTER_API_KEY === 'Configurada') {
+          document.getElementById('cfg-openrouter-key').placeholder = 'API Key Configurada (Escribe para cambiar)';
+        } else {
+          document.getElementById('cfg-openrouter-key').placeholder = 'En blanco para simulación o usar NVIDIA';
+        }
+        if (cfg.NVIDIA_API_KEY === 'Configurada') {
+          document.getElementById('cfg-nvidia-key').placeholder = 'API Key Configurada (Escribe para cambiar)';
+        } else {
+          document.getElementById('cfg-nvidia-key').placeholder = 'En blanco para simulación o usar OpenRouter';
+        }
+        if (cfg.ELEVENLABS_API_KEY === 'Configurada') {
+          document.getElementById('cfg-elevenlabs-key').placeholder = 'API Key Configurada (Escribe para cambiar)';
+        } else {
+          document.getElementById('cfg-elevenlabs-key').placeholder = 'En blanco para audio simulado';
+        }
+        if (cfg.NVIDIA_IMAGE_KEY === 'Configurada') {
+          document.getElementById('cfg-nvidia-image-key').placeholder = 'API Key Configurada (Escribe para cambiar)';
+        } else {
+          document.getElementById('cfg-nvidia-image-key').placeholder = 'En blanco para simulación o usar NVIDIA general';
+        }
+
+        document.getElementById('settings-modal').classList.remove('hidden');
+      } catch (err) {
+        alert('Error al cargar configuración: ' + err.message);
+      }
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    async function saveSettings() {
+      const config = {
+        OPENROUTER_API_KEY: document.getElementById('cfg-openrouter-key').value.trim(),
+        OPENROUTER_MODEL: document.getElementById('cfg-openrouter-model').value.trim(),
+        NVIDIA_API_KEY: document.getElementById('cfg-nvidia-key').value.trim(),
+        NVIDIA_MODEL: document.getElementById('cfg-nvidia-model').value.trim(),
+        ELEVENLABS_API_KEY: document.getElementById('cfg-elevenlabs-key').value.trim(),
+        ELEVENLABS_VOICE_ID: document.getElementById('cfg-elevenlabs-voice').value.trim(),
+        NVIDIA_IMAGE_KEY: document.getElementById('cfg-nvidia-image-key').value.trim(),
+        NVIDIA_IMAGE_MODEL: document.getElementById('cfg-nvidia-image-model').value.trim()
+      };
+
+      try {
+        const response = await fetch('/api/config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(config)
+        });
+
+        if (!response.ok) throw new Error('Error al guardar en el servidor');
+        
+        writeToTerminal('[System] Configuración de APIs guardada y recargada en caliente con éxito.', 'success');
+        closeSettingsModal();
+        
+        // Refresh ideas list to see if real agent is now accessible
+        generateIdeas();
+      } catch (err) {
+        alert('Error al guardar ajustes: ' + err.message);
+      }
+    }
+
+    async function fetchHistory() {
+      try {
+        const response = await fetch('/api/history');
+        const history = await response.json();
+        const tbody = document.getElementById('history-table-body');
+        tbody.innerHTML = '';
+        
+        if (history.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-gray-600 font-mono">Ningún video generado aún.</td></tr>`;
+          return;
+        }
+
+        // Sort by date descending
+        history.reverse();
+
+        history.forEach(item => {
+          let statusBadge = '';
+          if (item.status === 'procesando') {
+            statusBadge = `<span class="bg-yellow-950/80 text-yellow-400 border border-yellow-500/20 px-2.5 py-0.5 rounded text-[10px] font-semibold pulse-badge">Procesando</span>`;
+          } else if (item.status === 'completado') {
+            statusBadge = `<span class="bg-green-950/80 text-green-400 border border-green-500/20 px-2.5 py-0.5 rounded text-[10px] font-semibold">Completado</span>`;
+          } else {
+            statusBadge = `<span class="bg-red-950/80 text-red-400 border border-red-500/20 px-2.5 py-0.5 rounded text-[10px] font-semibold">Fallido</span>`;
+          }
+
+          const themeCell = item.folder_name && item.status === 'completado' 
+            ? `<a href="/proyecto/${item.folder_name}" target="_blank" class="text-cyan-400 hover:text-cyan-300 hover:underline font-semibold" title="Ver detalles y metadatos de YouTube">${item.tema}</a>`
+            : `<span title="${item.tema}">${item.tema}</span>`;
+
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-white/[0.02] transition';
+          tr.innerHTML = `
+            <td class="py-3 pr-2 font-medium truncate max-w-[200px]">${themeCell}</td>
+            <td class="py-3 text-gray-500 font-mono">${item.fecha}</td>
+            <td class="py-3 text-right font-mono">${statusBadge}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Error fetching history:', err);
+      }
+    }
+
+    async function generateIdeas() {
+      const btn = document.getElementById('btn-ideas');
+      const loader = document.getElementById('ideas-loader');
+      const container = document.getElementById('ideas-container');
+      
+      btn.disabled = true;
+      loader.classList.remove('hidden');
+      container.innerHTML = `
+        <div class="h-full flex flex-col items-center justify-center text-gray-500 py-10">
+          <span class="animate-spin text-cyan-400 text-3xl mb-3">&#9696;</span>
+          <p class="text-sm font-mono">El Agente Ideador está descodificando misterios digitales...</p>
+        </div>
+      `;
+
+      try {
+        const response = await fetch('/api/ideas');
+        if (!response.ok) throw new Error('Failed to generate ideas');
+        const data = await response.json();
+        
+        container.innerHTML = '';
+        if (!data.ideas || data.ideas.length === 0) {
+          container.innerHTML = `
+            <div class="h-full flex flex-col items-center justify-center text-gray-500 py-10">
+              <p class="text-sm font-mono">No se pudieron generar propuestas. Inténtalo de nuevo.</p>
+            </div>
+          `;
+          return;
+        }
+
+        data.ideas.forEach((idea, index) => {
+          const div = document.createElement('div');
+          div.className = 'glass rounded-lg p-5 glow-border flex flex-col md:flex-row md:items-center justify-between gap-4 transition duration-300';
+          div.innerHTML = `
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs text-cyan-400 bg-cyan-950/50 border border-cyan-500/20 px-2 py-0.5 rounded">Propuesta ${index + 1}</span>
+              </div>
+              <h3 class="text-base font-semibold text-white mt-2 mb-1">${idea.titulo}</h3>
+              <p class="text-xs text-gray-400 leading-relaxed">${idea.descripcion}</p>
+            </div>
+            <button 
+              onclick="launchVideo('${idea.titulo.replace(/'/g, "\\'")}')" 
+              class="shrink-0 bg-cyan-950/40 hover:bg-cyan-800 border border-cyan-500/30 hover:border-cyan-500 hover:text-white text-cyan-400 font-semibold text-xs px-4 py-2.5 rounded-lg transition font-mono self-start md:self-center"
+            >
+              Lanzar Video
+            </button>
+          `;
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error('Error generating ideas:', err);
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-cyan-400 py-10">
+            <p class="text-sm font-mono">Error al consultar el Agente Ideador.</p>
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        loader.classList.add('hidden');
+      }
+    }
+
+    function switchIdeasTab(tab) {
+      const btnGenerator = document.getElementById('tab-btn-generator');
+      const btnMemory = document.getElementById('tab-btn-memory');
+      const viewGenerator = document.getElementById('ideas-generator-view');
+      const viewMemory = document.getElementById('ideas-memory-view');
+      const actGenerator = document.getElementById('generator-actions');
+      const actMemory = document.getElementById('memory-actions');
+
+      if (tab === 'generator') {
+        // Button Styles
+        btnGenerator.className = 'border-b-2 border-cyan-400 text-cyan-400 text-sm font-semibold uppercase tracking-wider font-mono pb-2 px-1 focus:outline-none transition duration-200';
+        btnMemory.className = 'border-b-2 border-transparent text-gray-400 hover:text-gray-200 text-sm font-semibold uppercase tracking-wider font-mono pb-2 px-1 focus:outline-none transition duration-200';
+        
+        // Views
+        viewGenerator.classList.remove('hidden');
+        viewMemory.classList.add('hidden');
+        
+        // Actions
+        actGenerator.classList.remove('hidden');
+        actMemory.classList.add('hidden');
+      } else {
+        // Button Styles
+        btnGenerator.className = 'border-b-2 border-transparent text-gray-400 hover:text-gray-200 text-sm font-semibold uppercase tracking-wider font-mono pb-2 px-1 focus:outline-none transition duration-200';
+        btnMemory.className = 'border-b-2 border-cyan-400 text-cyan-400 text-sm font-semibold uppercase tracking-wider font-mono pb-2 px-1 focus:outline-none transition duration-200';
+        
+        // Views
+        viewGenerator.classList.add('hidden');
+        viewMemory.classList.remove('hidden');
+        
+        // Actions
+        actGenerator.classList.add('hidden');
+        actMemory.classList.remove('hidden');
+
+        // Load database content
+        fetchIdeasMemory();
+      }
+    }
+
+    async function fetchIdeasMemory() {
+      const container = document.getElementById('memory-container');
+      container.innerHTML = `
+        <div class="h-full flex flex-col items-center justify-center text-gray-500 py-10">
+          <span class="animate-spin text-cyan-400 text-3xl mb-3">&#9696;</span>
+          <p class="text-sm font-mono">Cargando ideas guardadas desde la base de datos local...</p>
+        </div>
+      `;
+
+      try {
+        const response = await fetch('/api/ideas-memory');
+        if (!response.ok) throw new Error('Error al cargar la memoria');
+        const data = await response.json();
+        
+        container.innerHTML = '';
+        if (!data.ideas || data.ideas.length === 0) {
+          container.innerHTML = `
+            <div class="h-full flex flex-col items-center justify-center text-gray-500 py-10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-4m-8 0H4" />
+              </svg>
+              <p class="text-sm font-mono text-center">La base de datos de ideas está vacía.<br><span class="text-xs text-gray-600">Genera ideas nuevas en la otra pestaña para guardarlas automáticamente.</span></p>
+            </div>
+          `;
+          return;
+        }
+
+        data.ideas.forEach((idea, index) => {
+          const div = document.createElement('div');
+          div.className = 'glass rounded-lg p-5 glow-border flex flex-col md:flex-row md:items-center justify-between gap-4 transition duration-300';
+          
+          // Formatting saving date
+          let dateStr = "";
+          if (idea.fecha_guardado) {
+            try {
+              // Extract date parts from SQLite UTC/Local format (YYYY-MM-DD HH:MM:SS)
+              // If it's a string, we can display it nicely
+              dateStr = ` • Guardado: ${idea.fecha_guardado}`;
+            } catch(e) {
+              dateStr = ` • Guardado: ${idea.fecha_guardado}`;
+            }
+          }
+          
+          div.innerHTML = `
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs text-cyan-400 bg-cyan-950/50 border border-cyan-500/20 px-2 py-0.5 rounded">Idea #${data.ideas.length - index}</span>
+                <span class="text-[10px] text-gray-500 font-mono">${dateStr}</span>
+              </div>
+              <h3 class="text-base font-semibold text-white mt-2 mb-1">${idea.titulo}</h3>
+              <p class="text-xs text-gray-400 leading-relaxed">${idea.descripcion}</p>
+            </div>
+            <button 
+              onclick="launchVideo('${idea.titulo.replace(/'/g, "\\'")}')" 
+              class="shrink-0 bg-cyan-950/40 hover:bg-cyan-800 border border-cyan-500/30 hover:border-cyan-500 hover:text-white text-cyan-400 font-semibold text-xs px-4 py-2.5 rounded-lg transition font-mono self-start md:self-center"
+            >
+              Lanzar Video
+            </button>
+          `;
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error('Error fetching ideas memory:', err);
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-cyan-400 py-10">
+            <p class="text-sm font-mono">Error al consultar la base de datos de ideas.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function clearIdeasMemory() {
+      if (!confirm("¿Estás seguro de que deseas vaciar por completo la memoria de ideas de la base de datos? Esta acción no se puede deshacer.")) {
+        return;
+      }
+      
+      const btn = document.getElementById('btn-clear-memory');
+      btn.disabled = true;
+      btn.textContent = "Vaciando...";
+      
+      try {
+        const response = await fetch('/api/ideas-memory', {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) throw new Error('Failed to clear memory');
+        
+        writeToTerminal('[System] Memoria de ideas vaciada exitosamente en la base de datos.', 'success');
+        fetchIdeasMemory();
+      } catch (err) {
+        console.error('Error clearing ideas memory:', err);
+        alert('Error al vaciar la memoria: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Vaciar Memoria";
+      }
+    }
+
+    function clearTerminal() {
+      const term = document.getElementById('terminal');
+      term.innerHTML = '<div class="text-gray-500">// Consola limpia. Esperando ejecución.</div>';
+    }
+
+    function writeToTerminal(text, type = 'info') {
+      const term = document.getElementById('terminal');
+      
+      // Clean placeholder on first write
+      if (term.innerHTML.includes('// Consola')) {
+        term.innerHTML = '';
+      }
+
+      const div = document.createElement('div');
+      
+      // Color coding lines
+      if (type === 'error') {
+        div.className = 'text-red-400 font-bold';
+      } else if (type === 'success') {
+        div.className = 'text-green-300 font-semibold';
+      } else if (type === 'system') {
+        div.className = 'text-cyan-400';
+      } else {
+        div.className = 'text-gray-300';
+      }
+
+      div.textContent = text;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    let currentTopic = "";
+
+    function openScriptModal(topic, guionText) {
+      currentTopic = topic;
+      document.getElementById('script-modal-topic').textContent = `Tema: ${topic}`;
+      document.getElementById('script-textarea').value = guionText;
+      document.getElementById('script-modal').classList.remove('hidden');
+    }
+
+    function closeScriptModal() {
+      document.getElementById('script-modal').classList.add('hidden');
+    }
+
+    async function confirmAndLaunch() {
+      const guionText = document.getElementById('script-textarea').value.trim();
+      if (!guionText) {
+        alert("El guion no puede estar vacío.");
+        return;
+      }
+
+      const btnConfirm = document.getElementById('btn-confirm-launch');
+      const loader = document.getElementById('launch-loader');
+      
+      btnConfirm.disabled = true;
+      loader.classList.remove('hidden');
+      
+      try {
+        // 1. Save the edited script to a temporary file on the server
+        const response = await fetch('/api/guardar-guion-temp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ tema: currentTopic, guion: guionText })
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al guardar el guion temporal en el servidor');
+        }
+
+        const data = await response.json();
+        const guionPath = data.guion_path;
+        
+        writeToTerminal(`[System] Guion guardado temporalmente. Iniciando producción del video...`, 'system');
+        
+        // Close the script modal
+        closeScriptModal();
+        
+        // 2. Launch production via WebSocket with the custom script path!
+        startProductionWebSocket(currentTopic, guionPath);
+
+      } catch (err) {
+        alert("Error al iniciar producción: " + err.message);
+        writeToTerminal(`[Error] Fallo al iniciar producción: ${err.message}`, 'error');
+      } finally {
+        btnConfirm.disabled = false;
+        loader.classList.add('hidden');
+      }
+    }
+
+    function executeTopicFromInput() {
+      const input = document.getElementById('custom-topic');
+      const topic = input.value.trim();
+      if (!topic) {
+        alert('Por favor escribe un tema primero.');
+        return;
+      }
+      launchVideo(topic);
+      input.value = '';
+    }
+
+    async function launchVideo(topic) {
+      clearTerminal();
+      writeToTerminal(`[System] Generando guion inicial para: "${topic}"... Por favor espera.`, 'system');
+      writeToTerminal(`[System] Consultando al Agente Redactor... Esto puede tomar unos segundos.`, 'system');
+      
+      // Update badge
+      const pulseBadge = document.getElementById('terminal-pulse');
+      pulseBadge.classList.add('bg-red-500');
+      pulseBadge.classList.remove('bg-yellow-500');
+
+      // Disable Lanzar button temporarily if it exists on topic input
+      const btnLanzar = document.getElementById('btn-lanzar');
+      const originalText = btnLanzar.innerHTML;
+      btnLanzar.disabled = true;
+      btnLanzar.innerHTML = `<span class="animate-spin mr-1">&#9696;</span> Redactando...`;
+
+      try {
+        const response = await fetch('/api/generar-guion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ tema: topic })
+        });
+
+        if (!response.ok) {
+          const errBody = await response.text();
+          throw new Error(errBody || 'Error al obtener el guion redactado.');
+        }
+
+        const data = await response.json();
+        writeToTerminal(`[System] Guion generado exitosamente por el Agente Redactor. Abriendo panel de revisión...`, 'success');
+        
+        // Reset button
+        btnLanzar.disabled = false;
+        btnLanzar.innerHTML = originalText;
+        pulseBadge.classList.add('bg-yellow-500');
+        pulseBadge.classList.remove('bg-red-500');
+
+        // Open the script editing modal
+        openScriptModal(topic, data.guion);
+
+      } catch (err) {
+        writeToTerminal(`[Error] Fallo al redactar guion: ${err.message}`, 'error');
+        btnLanzar.disabled = false;
+        btnLanzar.innerHTML = originalText;
+        pulseBadge.classList.add('bg-yellow-500');
+        pulseBadge.classList.remove('bg-red-500');
+      }
+    }
+
+    async function startProductionWebSocket(topic, guionPath) {
+      writeToTerminal(`[System] Inicializando flujo de producción para el tema: "${topic}"`, 'system');
+      
+      // Update badge
+      const pulseBadge = document.getElementById('terminal-pulse');
+      pulseBadge.classList.add('bg-red-500');
+      pulseBadge.classList.remove('bg-yellow-500');
+
+      try {
+        // 1. Post to API to update status in history.json
+        const response = await fetch('/api/ejecutar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ tema: topic })
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al registrar el tema en el servidor');
+        }
+
+        writeToTerminal(`[System] Tema registrado como "procesando" en history.json.`, 'system');
+        fetchHistory(); // Refresh history list
+
+        const subtitulos = document.getElementById('burn-subtitles').checked;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        let wsUrl = `${protocol}//${window.location.host}/api/ws/ejecutar?tema=${encodeURIComponent(topic)}&subtitulos=${subtitulos}`;
+        if (guionPath) {
+          wsUrl += `&guion_path=${encodeURIComponent(guionPath)}`;
+        }
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = function() {
+          writeToTerminal(`[WebSocket] Conexión establecida. Iniciando agentes de producción...`, 'system');
+        };
+
+        ws.onmessage = function(event) {
+          const logLine = event.data;
+          
+          if (logLine.includes('PROCESAMIENTO FINALIZADO EXITOSAMENTE')) {
+            writeToTerminal(logLine, 'success');
+          } else if (logLine.includes('Error') || logLine.includes('Traceback') || logLine.includes('failed')) {
+            writeToTerminal(logLine, 'error');
+          } else if (logLine.includes('[System]') || logLine.includes('===')) {
+            writeToTerminal(logLine, 'system');
+          } else {
+            writeToTerminal(logLine, 'info');
+          }
+        };
+
+        ws.onclose = function(event) {
+          writeToTerminal(`[WebSocket] Conexión cerrada.`, 'system');
+          
+          // Reset pulse badge
+          pulseBadge.classList.add('bg-yellow-500');
+          pulseBadge.classList.remove('bg-red-500');
+          
+          // Refresh history list to see final status (completed or failed)
+          fetchHistory();
+        };
+
+        ws.onerror = function(err) {
+          writeToTerminal(`[WebSocket Error] ${err.message || 'Error de conexión'}`, 'error');
+        };
+
+      } catch (err) {
+        writeToTerminal(`[Error] Fallo al arrancar la producción de video: ${err.message}`, 'error');
+        pulseBadge.classList.add('bg-yellow-500');
+        pulseBadge.classList.remove('bg-red-500');
+      }
+    }
+  </script>
+</body>
+</html>

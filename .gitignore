@@ -1,0 +1,28 @@
+# Configuración local sensible
+.env
+
+# Directorios de salida con archivos de video e imágenes pesados
+output/
+
+# Base de datos local
+ideas_memory.db
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Archivos de depuración y pruebas temporales
+/scratch/
+test_*.png
+test_*.mp4
+prueba_*.mp4
+*.log
+
+# Entornos virtuales locales
+.venv/
+venv/
+env/
