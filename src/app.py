@@ -703,6 +703,37 @@ def build_fact_enriched_mock_script(tema: str, duracion: int) -> str:
                 "Y mientras miras las fotos en blanco y negro de mil novecientos cincuenta y nueve, el viento helado parece susurrar tu nombre."
             )
             
+    elif "franklin" in t_lower:
+        if duracion == 1:
+            return (
+                "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
+                "Sir John Franklin zarpó de Inglaterra con ciento veintinueve hombres a bordo del HMS Erebus y el HMS Terror para encontrar el Paso del Noroeste.\n"
+                "Ambos barcos quedan atrapados en las placas heladas cerca de la Isla del Rey Guillermo durante dos años árticos ininterrumpidos.\n"
+                "Las latas de conserva selladas con plomo barato comienzan a envenenar lentamente a la tripulación con pesadillas y demencia antes de sucumbir al hambre."
+            )
+        elif duracion == 2:
+            return (
+                "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
+                "Sir John Franklin zarpó de Inglaterra al mando de dos buques de la Real Armada: el HMS Erebus y el HMS Terror, equipados con motores a vapor.\n"
+                "Tras internarse en el Estrecho de Lancaster, los dos barcos quedan atrapados en las placas heladas cerca de la Isla del Rey Guillermo durante dos años.\n"
+                "Las reservas de alimentos enlatados selladas apresuradamente con plomo comienzan a envenenar lentamente a la tripulación con delirios e insomnio.\n"
+                "En abril de mil ochocientos cuarenta y ocho, los sobrevivientes abandonan los buques congelados para caminar sobre el hielo hacia el continente, muriendo en la nieve.\n"
+                "En dos mil catorce, los restos intactos del HMS Erebus fueron descubiertos sumergidos en el fondo marino, conservando la vajilla del capitán."
+            )
+        else:
+            return (
+                "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
+                "Sir John Franklin zarpó de Inglaterra al mando de dos buques insignia de la Real Armada: el HMS Erebus y el HMS Terror, con ciento veintinueve marineros a bordo.\n"
+                "Su objetivo era cartografiar el último tramo desconocido del Paso del Noroeste, navegando entre icebergs helados en el archipiélago ártico.\n"
+                "En septiembre de mil ochocientos cuarenta y seis, el invierno polar atrapó ambos barcos en las placas de hielo infranqueables al norte de la Isla del Rey Guillermo.\n"
+                "Durante veinticuatro meses en oscuridad casi continua, la tripulación consumió raciones de carne enlatada selladas defectuosamente con soldadura de plomo concentrado.\n"
+                "Los análisis de ADN y restos óseos recuperados décadas después confirmaron niveles tóxicos de plomo que provocaron brotes de paranoia y demencia entre los oficiales.\n"
+                "En abril de mil ochocientos cuarenta y ocho, tras la muerte del capitán Franklin, ciento cinco sobrevivientes abandonaron los buques para arrastrar botes sobre la banquisa congelada.\n"
+                "Marcas de cortes con cuchillo encontradas en los fémures de los restos congelados revelaron la desesperada lucha final por la supervivencia mediante canibalismo.\n"
+                "Las expediciones de rescate enviadas durante años solo hallaron esqueletos diseminados en la nieve y una nota enterrada en un hito de piedras conocida como la Nota de Victory Point.\n"
+                "Y mientras observas las fotografías sumergidas del HMS Erebus descubierto en dos mil catorce, el silencio del Ártico sigue guardando el secreto."
+            )
+
     elif "petscop" in t_lower:
         return (
             f"El doce de marzo de dos mil diecisiete, un canal anónimo de YouTube publica el primer gameplay de {tema}.\n"
@@ -721,33 +752,32 @@ def build_fact_enriched_mock_script(tema: str, duracion: int) -> str:
     # General fact-rich narrative fallback if topic is unknown
     if duracion == 1:
         return (
-            f"Examinas los archivos de inteligencia desclasificados sobre {tema}.\n"
-            "Las primeras anomalías se registraron en los informes de campo, donde datos oficiales no coinciden con las bitácoras originales.\n"
-            "Testigos presenciales confirmaron la pérdida repentina de comunicación segundos antes de que el lugar fuera cercado por personal militar.\n"
-            "Los expedientes fueron clausurados con un sello de reserva absoluta, pero las marcas en el terreno siguen emitiendo lectura."
+            f"Examinas las crónicas y registros documentados sobre {tema}.\n"
+            "Los primeros informes oficiales de la época registraron eventos inusuales que desafiaban las explicaciones convencionales.\n"
+            "Testigos presenciales confirmaron la alteración de los hechos minutos antes de que el lugar fuera evacuado.\n"
+            "Los expedientes sobre {tema} permanecen custodiados en el archivo histórico, conservando el misterio para quienes investigan su origen."
         )
     elif duracion == 2:
         return (
-            f"Examinas los expedientes de investigación clasificados en los archivos sobre {tema}.\n"
-            "Todo comenzó cuando los primeros informes de campo registraron alteraciones anómalas que la ciencia oficial intentó encubrir.\n"
-            "Las transcripciones de audio revelan pausas heladas y mensajes enigmáticos enviados desde la zona restringida.\n"
-            "Fotografías desclasificadas muestran que las evidencias físicas fueron alteradas antes de que las autoridades declararan el caso como cerrado.\n"
-            "Las lecturas registradas en el mapa siguen activas hasta el día de hoy, sugiriendo que la anomalía de {tema} nunca desapareció.\n"
-            "Y al revisar los registros oficiales, descubres que tu propio nombre figura en el anexo final del expediente."
+            f"Examinas los expedientes de investigación clasificados en los archivos históricos sobre {tema}.\n"
+            "Todo comenzó cuando los primeros informes de campo registraron alteraciones anómalas que las autoridades de la época intentaron encubrir.\n"
+            "Las transcripciones de las bitácoras revelan pausas heladas y notas enigmáticas dejadas por los investigadores principales.\n"
+            "Fotografías históricas muestran que las evidencias físicas fueron alteradas antes de declarar el caso como cerrado.\n"
+            "Las interrogantes sobre {tema} siguen vigentes hasta el día de hoy, sugiriendo que la historia no ha sido contada en su totalidad.\n"
+            "Y al revisar los registros oficiales, descubres un detalle en las notas al pie que cambia la perspectiva de todo el suceso."
         )
     else:
         return (
-            f"Examinas los expedientes de investigación desclasificados en los archivos de seguridad sobre {tema}.\n"
-            "Todo comenzó cuando las primeras lecturas anómalas fueron detectadas en los sensores de la estación de monitoreo.\n"
-            "Los informes de campo de los analistas principales registraron discrepancias severas entre los diarios de ruta y la versión oficial presentada a la prensa.\n"
-            "Testigos clave fueron reubicados bajo identidades protegidas tras declarar haber presenciado eventos que desafiaban las leyes de la física conocidas.\n"
-            "En las transcripciones de audio de las cintas magnéticas se escuchan frecuencias ultra-bajas y voces intermitentes repitiendo coordenadas geográficas precisas.\n"
-            "Fotografías desclasificadas con sellos de reservado muestran las marcas de impacto y la infraestructura abandonada tras la evacuación inmediata.\n"
-            "Los análisis de laboratorio posteriores confirmaron la presencia de elementos compuestos que no corresponden a ninguna patente registrada en la época.\n"
-            "A pesar de los múltiples intentos de borrado en las bases de datos gubernamentales, rastros del expediente de {tema} sobrevivieron en copias de respaldo locales.\n"
-            "Observas los gráficos del informe final y notas que los intervalos entre cada incidente se han reducido drásticamente en los últimos años.\n"
-            "El archivo se cierra con una advertencia en rojo: El fenómeno no ha sido neutralizado. Solo se encuentra en estado latente.\n"
-            "Y mientras lees estas líneas en tu pantalla, los sensores de tu ciudad comienzan a registrar la misma frecuencia."
+            f"Examinas los expedientes de investigación desclasificados en los archivos históricos sobre {tema}.\n"
+            "Todo comenzó cuando las primeras observaciones anómalas fueron registradas en las bitácoras de campo del equipo de investigación.\n"
+            "Los informes oficiales presentaron discrepancias severas al compararlos con los testimonios originales de los testigos presenciales.\n"
+            "Investigadores clave declararon haber presenciado eventos que desafiaban las explicaciones científicas de la época antes de que el expediente fuera reservado.\n"
+            "En las transcripciones de las cartas y notas manuscritas se mencionan detalles inquietantes que coinciden con incidentes similares registrados años atrás.\n"
+            "Fotografías desclasificadas muestran la infraestructura abandonada y las marcas en el terreno tras la interrupción abrupta de las operaciones.\n"
+            "Los análisis posteriores confirmaron la presencia de patrones anómalos que no corresponden a ninguna explicación convencional.\n"
+            "A pesar del paso del tiempo, fragmentos del expediente de {tema} han sobrevivido en archivos regionales de difícil acceso.\n"
+            "Observas las fechas y los nombres de las bitácoras y notas que las coincidencias son demasiado precisas para ser casuales.\n"
+            "El archivo concluye con una anotación al margen: El fenómeno permanece sin resolver en la historia oficial."
         )
 
 @app.post("/api/generar-guion")
