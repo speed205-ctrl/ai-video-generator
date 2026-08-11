@@ -208,7 +208,7 @@ class ElevenLabsClient:
 class NvidiaImageClient:
     """
     Client for NVIDIA Cloud API Image Generation supporting BFL FLUX.2 Klein 4B and SD 3.5 Large.
-    Supports retries and optional fallback to local SD WebUI / AUTOMATIC1111 / Forge.
+    Supports retries, aspect ratio (16:9 or 9:16), and optional fallback to local SD WebUI.
     """
     def __init__(self, api_key: str, model: str = "black-forest-labs/flux.2-klein-4b", enable_local_fallback: bool = True):
         self.api_key = api_key
@@ -216,7 +216,7 @@ class NvidiaImageClient:
         self.base_url = "https://ai.api.nvidia.com/v1/genai"
         self.local_fallback = LocalSDWebUIClient() if enable_local_fallback else None
 
-    async def _raw_generate_image(self, prompt: str, output_path: str) -> str:
+    async def _raw_generate_image(self, prompt: str, output_path: str, aspect_ratio: str = "16:9") -> str:
         replacements = {
             r"\bblood(y)?\b": "crimson",
             r"\bdead\b": "still",
@@ -235,6 +235,10 @@ class NvidiaImageClient:
         for pattern, replacement in replacements.items():
             sanitized_prompt = re.sub(pattern, replacement, sanitized_prompt, flags=re.IGNORECASE)
             
+        width, height = (576, 1024) if aspect_ratio == "9:16" else (1024, 576)
+        aspect_suffix = "9:16 vertical portrait framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic framing"
+        final_prompt = f"{sanitized_prompt}, {aspect_suffix}"
+
         url = f"{self.base_url}/{self.model}"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -244,19 +248,19 @@ class NvidiaImageClient:
         
         if "black-forest-labs" in self.model:
             payload = {
-                "prompt": sanitized_prompt,
-                "width": 1024,
-                "height": 576,
+                "prompt": final_prompt,
+                "width": width,
+                "height": height,
                 "seed": 0,
                 "steps": 4
             }
         else:
             payload = {
-                "prompt": sanitized_prompt,
+                "prompt": final_prompt,
                 "cfg_scale": 5.0,
                 "seed": 0,
                 "steps": 25,
-                "aspect_ratio": "16:9"
+                "aspect_ratio": aspect_ratio
             }
 
         async with aiohttp.ClientSession() as session:
@@ -292,9 +296,9 @@ class NvidiaImageClient:
                     f.write(image_bytes)
                 return output_path
 
-    async def generate_image(self, prompt: str, output_path: str) -> str:
+    async def generate_image(self, prompt: str, output_path: str, aspect_ratio: str = "16:9") -> str:
         try:
-            return await _async_retry(self._raw_generate_image, prompt, output_path)
+            return await _async_retry(self._raw_generate_image, prompt, output_path, aspect_ratio=aspect_ratio)
         except Exception as e:
             if self.local_fallback:
                 logger.warning(f"Cloud Image API failed ({e}). Attempting local SD WebUI fallback...")
