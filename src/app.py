@@ -115,6 +115,7 @@ class ExecuteRequest(BaseModel):
 class ScriptGenerateRequest(BaseModel):
     tema: str
     duracion_minutos: int = 1
+    parte_serie: str = "single"
 
 class SaveTempScriptRequest(BaseModel):
     tema: str
@@ -668,122 +669,184 @@ def get_configured_llm_client() -> LLMClient:
     else:
         raise ValueError("No hay clave de API válida de LLM configurada.")
 
-def build_fact_enriched_mock_script(tema: str, duracion: int) -> str:
+def build_fact_enriched_mock_script(tema: str, duracion: int, parte: str = "single") -> str:
     t_lower = tema.lower()
     
+    if "franklin" in t_lower:
+        if parte == "part1":
+            return (
+                "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
+                "Sir John Franklin zarpó de Inglaterra con ciento veintinueve hombres a bordo del HMS Erebus y el HMS Terror para cartografiar el Paso del Noroeste.\n"
+                "Equipados con motores a vapor y raciones de carne enlatada para tres años, la expedición ingresó al Estrecho de Lancaster sin sospechar que jamás regresarían.\n"
+                "En septiembre de mil ochocientos cuarenta y seis, las placas heladas aprisionaron ambos buques cerca de la Isla del Rey Guillermo en completa oscuridad polar.\n"
+                "Pero lo que la tripulación descubrió dentro de las latas de alimentos selladas apresuradamente destruiría su cordura antes del primer invierno...\n"
+                "Sígueme ahora mismo para ver la Parte 2."
+            )
+        elif parte == "part2":
+            return (
+                "Recordemos el horror en el Ártico de mil ochocientos cuarenta y cinco. Atrapados en el hielo, los ciento veintinueve marineros de Franklin enfrentaron una amenaza inesperada.\n"
+                "La soldadura de plomo concentrado usada para sellar apresuradamente los envases comenzó a filtrarse en la comida diaria.\n"
+                "Los oficiales sufrieron brotes masivos de paranoia, insomnio y encías sangrantes mientras la temperatura caía a menos cuarenta grados.\n"
+                "En abril de mil ochocientos cuarenta y ocho, tras la muerte de Franklin, los sobrevivientes abandonaron los barcos para arrastrar botes pesados sobre la banquisa congelada.\n"
+                "Lo que las expediciones de rescate hallaron décadas después en los huesos congelados revelaría una desesperada lucha final por la supervivencia...\n"
+                "Sígueme para ver la Parte 3 y la revelación del hallazgo moderno."
+            )
+        elif parte == "part3":
+            return (
+                "Llegamos al desenlace del misterio de la Expedición Franklin. Durante más de un siglo, el paradero del HMS Erebus y el HMS Terror fue un enigma de la historia naval.\n"
+                "Los análisis de ADN y marcas de cortes con navaja en los fémures recuperados en la nieve confirmaron episodios desgarradores de canibalismo en los últimos días.\n"
+                "En dos mil catorce, arqueólogos submarinos localizaron los restos intactos del HMS Erebus sumergidos en el fondo marino canadiense.\n"
+                "La vajilla del capitán, las botas de los marineros y los documentos de a bordo permanecen intactos en el hielo bajo el agua.\n"
+                "Y mientras observas las imágenes sumergidas en tu pantalla, el silencio del Ártico sigue guardando la última lección sobre la soberbia humana."
+            )
+        else:
+            if duracion == 1:
+                return (
+                    "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
+                    "Sir John Franklin zarpó de Inglaterra con ciento veintinueve hombres a bordo del HMS Erebus y el HMS Terror para encontrar el Paso del Noroeste.\n"
+                    "Ambos barcos quedan atrapados en las placas heladas cerca de la Isla del Rey Guillermo durante dos años árticos ininterrumpidos.\n"
+                    "Las latas de conserva selladas con plomo barato comienzan a envenenar lentamente a la tripulación con pesadillas y demencia antes de sucumbir al hambre."
+                )
+            elif duracion == 2:
+                return (
+                    "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
+                    "Sir John Franklin zarpó de Inglaterra al mando de dos buques de la Real Armada: el HMS Erebus y el HMS Terror, equipados con motores a vapor.\n"
+                    "Tras internarse en el Estrecho de Lancaster, los dos barcos quedan atrapados en las placas heladas cerca de la Isla del Rey Guillermo durante dos años.\n"
+                    "Las reservas de alimentos enlatados selladas apresuradamente con plomo comienzan a envenenar lentamente a la tripulación con delirios e insomnio.\n"
+                    "En abril de mil ochocientos cuarenta y ocho, los sobrevivientes abandonan los buques congelados para caminar sobre el hielo hacia el continente, muriendo en la nieve.\n"
+                    "En dos mil catorce, los restos intactos del HMS Erebus fueron descubiertos sumergidos en el fondo marino, conservando la vajilla del capitán."
+                )
+            else:
+                return (
+                    "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
+                    "Sir John Franklin zarpó de Inglaterra al mando de dos buques insignia de la Real Armada: el HMS Erebus y el HMS Terror, con ciento veintinueve marineros a bordo.\n"
+                    "Su objetivo era cartografiar el último tramo desconocido del Paso del Noroeste, navegando entre icebergs helados en el archipiélago ártico.\n"
+                    "En septiembre de mil ochocientos cuarenta y seis, el invierno polar atrapó ambos barcos en las placas de hielo infranqueables al norte de la Isla del Rey Guillermo.\n"
+                    "Durante veinticuatro meses en oscuridad casi continua, la tripulación consumió raciones de carne enlatada selladas defectuosamente con soldadura de plomo concentrado.\n"
+                    "Los análisis de ADN y restos óseos recuperados décadas después confirmaron niveles tóxicos de plomo que provocaron brotes de paranoia y demencia entre los oficiales.\n"
+                    "En abril de mil ochocientos cuarenta y mecho, tras la muerte del capitán Franklin, ciento cinco sobrevivientes abandonaron los buques para arrastrar botes sobre la banquisa congelada.\n"
+                    "Marcas de cortes con cuchillo encontradas en los fémures de los restos congelados revelaron la desesperada lucha final por la supervivencia mediante canibalismo.\n"
+                    "Las expediciones de rescate enviadas durante años solo hallaron esqueletos diseminados en la nieve y una nota enterrada en un hito de piedras conocida como la Nota de Victory Point.\n"
+                    "Y mientras observas las fotografías sumergidas del HMS Erebus descubierto en dos mil catorce, el silencio del Ártico sigue guardando el secreto."
+                )
+
     # Specific historical facts dictionary
-    if "dyatlov" in t_lower or "paso" in t_lower:
-        if duracion == 1:
+    elif "dyatlov" in t_lower or "paso" in t_lower:
+        if parte == "part1":
             return (
                 "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
                 "Nueve excursionistas soviéticos liderados por Igor Dyatlov instalan su tienda en la Montaña de la Muerte. Ninguno regresará con vida.\n"
-                "Los rescatistas encuentran la carpa rajada desde el interior con navajas. Los cuerpos yacen en la nieve a medio vestir, algunos con costillas fracturadas sin ningún golpe o hematoma externo.\n"
-                "El informe oficial concluye con una frase escalofriante: murieron por una fuerza elemental irresistible. Y en su ropa, la radiación sigue emitiendo señal."
+                "Al caer la noche, una amenaza invisible los obliga a cortar la tienda de lona desde el interior con navajas y huir descalzos hacia la oscuridad helada.\n"
+                "Lo que los rescatistas encontraron semanas después en los primeros cuerpos abriría la investigación más enigmática del KGB...\n"
+                "Sígueme ahora mismo para ver la Parte 2."
             )
-        elif duracion == 2:
+        elif parte == "part2":
             return (
-                "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
-                "Nueve excursionistas soviéticos experimentados, liderados por Igor Dyatlov, establecen su último campamento en la pendiente de la Montaña de la Muerte.\n"
-                "Semanas después, los rescatistas encuentran la carpa principal cortada desde adentro con navajas. Las huellas muestran que huyeron descalzos hacia el bosque nocturno.\n"
-                "Las autopsias forenses revelan fracturas craneales brutales y tórax aplastados con una fuerza equivalente a un choque automovilístico, pero sin ningún rasguño en la piel exterior.\n"
-                "A dos de las víctimas les faltaban los ojos y la lengua. Los registros de la investigación médica soviética fueron clasificados de inmediato por el KGB.\n"
-                "Observas las últimas fotografías recuperadas del rollo de película. La última imagen es una esfera luminosa flotando en la oscuridad de los Urales."
+                "Continuamos con el misterio del Paso Dyatlov de mil novecientos cincuenta y nueve. En los Urales congelados, los rescatistas hallan los cuerpos a medio vestir en la nieve.\n"
+                "Las autopsias forenses revelan fracturas craneales brutales y tórax aplastados con una fuerza equivalente a un choque de automóvil, pero sin un solo hematoma exterior.\n"
+                "A dos de las víctimas les faltaban los ojos y la lengua. Y en los suéteres analizados con contadores Geiger, la radiación gamma seguía emitiendo lecturas elevadas.\n"
+                "Lo que decía la última anotación en el diario de ruta guardado en la nieve revelaría lo impensable...\n"
+                "Sígueme para ver la Parte 3 y la conclusión del caso."
+            )
+        elif parte == "part3":
+            return (
+                "Llegamos al desenlace del Paso Dyatlov. El informe de la fiscalía soviética en mil novecientos cincuenta y nueve fue archivado bajo secreto militar absoluto.\n"
+                "La conclusión oficial quedó redactada en una frase vaga: la causa de muerte fue una fuerza elemental irresistible.\n"
+                "Fotografías desclasificadas del rollo de película recuperado muestran una esfera de luz flotando en la pendiente antes del ataque.\n"
+                "Y mientras revisas las fotos en blanco y negro, la última línea del diario susurra: Ahora sabemos que ellos habitan aquí."
             )
         else:
-            return (
-                "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
-                "Nueve excursionistas soviéticos altamente entrenados del Instituto Politécnico de los Urales se adentran en la marcha alpina hacia la montaña Kholat Syakhl.\n"
-                "Al caer la noche, una amenaza invisible los obliga a tomar una decisión desesperada: rasgar la tienda de lona desde adentro con sus propias navajas para escapar.\n"
-                "Corren descalzos sobre la nieve congelada en completa oscuridad, separándose en la matorral a varios cientos de metros de distancia.\n"
-                "La partida de búsqueda encuentra semanas después los primeros cuerpos bajo un pino anciano. Las manos están destrozadas por intentar escalar el tronco helado.\n"
-                "En la quebrada del arroyo, los investigadores hallan a los cuatro miembros restantes con traumas severos: fracturas masivas de costillas y desprendimiento ocular sin lesiones externas.\n"
-                "Los análisis de los contadores Geiger revelan niveles anómalos de radiación gamma concentrados en los suéteres de las víctimas.\n"
-                "El expediente de la fiscalía de Sverdlovsk fue archivado bajo secreto militar antes de ser clausurado con una conclusión vaga: causa de muerte, una fuerza desconocida irresistible.\n"
-                "Revisas la bitácora del diario de ruta en su última página. Una anotación garabateada a mano dice: Ahora sabemos que ellos habitan aquí.\n"
-                "Y mientras miras las fotos en blanco y negro de mil novecientos cincuenta y nueve, el viento helado parece susurrar tu nombre."
-            )
-            
-    elif "franklin" in t_lower:
-        if duracion == 1:
-            return (
-                "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
-                "Sir John Franklin zarpó de Inglaterra con ciento veintinueve hombres a bordo del HMS Erebus y el HMS Terror para encontrar el Paso del Noroeste.\n"
-                "Ambos barcos quedan atrapados en las placas heladas cerca de la Isla del Rey Guillermo durante dos años árticos ininterrumpidos.\n"
-                "Las latas de conserva selladas con plomo barato comienzan a envenenar lentamente a la tripulación con pesadillas y demencia antes de sucumbir al hambre."
-            )
-        elif duracion == 2:
-            return (
-                "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
-                "Sir John Franklin zarpó de Inglaterra al mando de dos buques de la Real Armada: el HMS Erebus y el HMS Terror, equipados con motores a vapor.\n"
-                "Tras internarse en el Estrecho de Lancaster, los dos barcos quedan atrapados en las placas heladas cerca de la Isla del Rey Guillermo durante dos años.\n"
-                "Las reservas de alimentos enlatados selladas apresuradamente con plomo comienzan a envenenar lentamente a la tripulación con delirios e insomnio.\n"
-                "En abril de mil ochocientos cuarenta y ocho, los sobrevivientes abandonan los buques congelados para caminar sobre el hielo hacia el continente, muriendo en la nieve.\n"
-                "En dos mil catorce, los restos intactos del HMS Erebus fueron descubiertos sumergidos en el fondo marino, conservando la vajilla del capitán."
-            )
-        else:
-            return (
-                "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
-                "Sir John Franklin zarpó de Inglaterra al mando de dos buques insignia de la Real Armada: el HMS Erebus y el HMS Terror, con ciento veintinueve marineros a bordo.\n"
-                "Su objetivo era cartografiar el último tramo desconocido del Paso del Noroeste, navegando entre icebergs helados en el archipiélago ártico.\n"
-                "En septiembre de mil ochocientos cuarenta y seis, el invierno polar atrapó ambos barcos en las placas de hielo infranqueables al norte de la Isla del Rey Guillermo.\n"
-                "Durante veinticuatro meses en oscuridad casi continua, la tripulación consumió raciones de carne enlatada selladas defectuosamente con soldadura de plomo concentrado.\n"
-                "Los análisis de ADN y restos óseos recuperados décadas después confirmaron niveles tóxicos de plomo que provocaron brotes de paranoia y demencia entre los oficiales.\n"
-                "En abril de mil ochocientos cuarenta y ocho, tras la muerte del capitán Franklin, ciento cinco sobrevivientes abandonaron los buques para arrastrar botes sobre la banquisa congelada.\n"
-                "Marcas de cortes con cuchillo encontradas en los fémures de los restos congelados revelaron la desesperada lucha final por la supervivencia mediante canibalismo.\n"
-                "Las expediciones de rescate enviadas durante años solo hallaron esqueletos diseminados en la nieve y una nota enterrada en un hito de piedras conocida como la Nota de Victory Point.\n"
-                "Y mientras observas las fotografías sumergidas del HMS Erebus descubierto en dos mil catorce, el silencio del Ártico sigue guardando el secreto."
-            )
-
-    elif "petscop" in t_lower:
-        return (
-            f"El doce de marzo de dos mil diecisiete, un canal anónimo de YouTube publica el primer gameplay de {tema}.\n"
-            "Un supuesto juego de PlayStation 1 cancelado en mil novecientos noventa y siete por la desarrolladora ficticia Garalina.\n"
-            "El jugador 'Paul' recorre un mundo colorido de capturar criaturas que de pronto se desploma tras introducir un código secreto en la tumba de la escuela.\n"
-            "El juego desciende a una réplica digital de un trauma familiar con notas sobre adopción, reencarnación y grabaciones de movimientos que predicen las decisiones del jugador en tiempo real."
-        )
-    elif "polybius" in t_lower:
-        return (
-            f"En el otoño de mil novecientos ochenta y uno, extrañas máquinas de arcade sin marca aparecen en las salas de juego de Portland, Oregón.\n"
-            "Los jóvenes hacen filas interminables para jugar a {tema}, un título abstracto de disparos vectoriales psicodélicos.\n"
-            "Pronto comienzan los síntomas: amnesia retrógrada, insomnio nocturno severo y alucinaciones auditivas.\n"
-            "Testigos afirman que cada semana, hombres vestidos con trajes negros de lona abrían los muebles de madera para extraer los módulos de memoria sin recolectar las monedas."
-        )
+            if duracion == 1:
+                return (
+                    "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
+                    "Nueve excursionistas soviéticos liderados por Igor Dyatlov instalan su tienda en la Montaña de la Muerte. Ninguno regresará con vida.\n"
+                    "Los rescatistas encuentran la carpa rajada desde el interior con navajas. Los cuerpos yacen en la nieve a medio vestir, algunos con costillas fracturadas sin ningún golpe o hematoma externo.\n"
+                    "El informe oficial concluye con una frase escalofriante: murieron por una fuerza elemental irresistible. Y en su ropa, la radiación sigue emitiendo señal."
+                )
+            elif duracion == 2:
+                return (
+                    "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
+                    "Nueve excursionistas soviéticos experimentados, liderados por Igor Dyatlov, establecen su último campamento en la pendiente de la Montaña de la Muerte.\n"
+                    "Semanas después, los rescatistas encuentran la carpa principal cortada desde adentro con navajas. Las huellas muestran que huyeron descalzos hacia el bosque nocturno.\n"
+                    "Las autopsias forenses revelan fracturas craneales brutales y tórax aplastados con una fuerza equivalente a un choque automovilístico, pero sin ningún rasguño en la piel exterior.\n"
+                    "A dos de las víctimas les faltaban los ojos y la lengua. Los registros de la investigación médica soviética fueron clasificados de inmediato por el KGB.\n"
+                    "Observas las últimas fotografías recuperadas del rollo de película. La última imagen es una esfera luminosa flotando en la oscuridad de los Urales."
+                )
+            else:
+                return (
+                    "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
+                    "Nueve excursionistas soviéticos altamente entrenados del Instituto Politécnico de los Urales se adentran en la marcha alpina hacia la montaña Kholat Syakhl.\n"
+                    "Al caer la noche, una amenaza invisible los obliga a tomar una decisión desesperada: rasgar la tienda de lona desde adentro con sus propias navajas para escapar.\n"
+                    "Corren descalzos sobre la nieve congelada en completa oscuridad, separándose en la matorral a varios cientos de metros de distancia.\n"
+                    "La partida de búsqueda encuentra semanas después los primeros cuerpos bajo un pino anciano. Las manos están destrozadas por intentar escalar el tronco helado.\n"
+                    "En la quebrada del arroyo, los investigadores hallan a los cuatro miembros restantes con traumas severos: fracturas masivas de costillas y desprendimiento ocular sin lesiones externas.\n"
+                    "Los análisis de los contadores Geiger revelan niveles anómalos de radiación gamma concentrados en los suéteres de las víctimas.\n"
+                    "El expediente de la fiscalía de Sverdlovsk fue archivado bajo secreto militar antes de ser clausurado con una conclusión vaga: causa de muerte, una fuerza desconocida irresistible.\n"
+                    "Revisas la bitácora del diario de ruta en su última página. Una anotación garabateada a mano dice: Ahora sabemos que ellos habitan aquí.\n"
+                    "Y mientras miras las fotos en blanco y negro de mil novecientos cincuenta y nueve, el viento helado parece susurrar tu nombre."
+                )
 
     # General fact-rich narrative fallback if topic is unknown
-    if duracion == 1:
+    if parte == "part1":
         return (
             f"Examinas las crónicas y registros documentados sobre {tema}.\n"
-            "Los primeros informes oficiales de la época registraron eventos inusuales que desafiaban las explicaciones convencionales.\n"
-            "Testigos presenciales confirmaron la alteración de los hechos minutos antes de que el lugar fuera evacuado.\n"
-            "Los expedientes sobre {tema} permanecen custodiados en el archivo histórico, conservando el misterio para quienes investigan su origen."
+            "Los primeros informes oficiales registraron eventos inusuales que desafiaban las explicaciones convencionales.\n"
+            "Testigos presenciales confirmaron la alteración de los hechos minutos antes de que la zona fuera acordonada.\n"
+            "Pero lo que las investigaciones posteriores descubrieron en los archivos cambiaría todo...\n"
+            "Sígueme ahora mismo para ver la Parte 2."
         )
-    elif duracion == 2:
+    elif parte == "part2":
         return (
-            f"Examinas los expedientes de investigación clasificados en los archivos históricos sobre {tema}.\n"
-            "Todo comenzó cuando los primeros informes de campo registraron alteraciones anómalas que las autoridades de la época intentaron encubrir.\n"
-            "Las transcripciones de las bitácoras revelan pausas heladas y notas enigmáticas dejadas por los investigadores principales.\n"
-            "Fotografías históricas muestran que las evidencias físicas fueron alteradas antes de declarar el caso como cerrado.\n"
-            "Las interrogantes sobre {tema} siguen vigentes hasta el día de hoy, sugiriendo que la historia no ha sido contada en su totalidad.\n"
-            "Y al revisar los registros oficiales, descubres un detalle en las notas al pie que cambia la perspectiva de todo el suceso."
+            f"Continuamos explorando los archivos históricos de {tema}.\n"
+            "Las transcripciones de las bitácoras revelaron pausas heladas y notas enigmáticas dejadas por los investigadores principales.\n"
+            "Fotografías desclasificadas muestran que las evidencias físicas fueron alteradas antes de declarar el caso como cerrado.\n"
+            "Lo que reveló el informe final permaneció archivado bajo reserva absoluta durante décadas...\n"
+            "Sígueme para ver la Parte 3 y la conclusión final."
+        )
+    elif parte == "part3":
+        return (
+            f"Llegamos al desenlace de los registros sobre {tema}.\n"
+            "Investigadores modernos reabrieron las pruebas utilizando tecnología de precisión para analizar los patrones del caso.\n"
+            "Las coincidencias en las fechas y las bitácoras demostraron que la historia oficial no contó la verdad completa.\n"
+            "Y mientras revisas estas imágenes en tu pantalla, los registros nos recuerdan que la historia sigue abierta."
         )
     else:
-        return (
-            f"Examinas los expedientes de investigación desclasificados en los archivos históricos sobre {tema}.\n"
-            "Todo comenzó cuando las primeras observaciones anómalas fueron registradas en las bitácoras de campo del equipo de investigación.\n"
-            "Los informes oficiales presentaron discrepancias severas al compararlos con los testimonios originales de los testigos presenciales.\n"
-            "Investigadores clave declararon haber presenciado eventos que desafiaban las explicaciones científicas de la época antes de que el expediente fuera reservado.\n"
-            "En las transcripciones de las cartas y notas manuscritas se mencionan detalles inquietantes que coinciden con incidentes similares registrados años atrás.\n"
-            "Fotografías desclasificadas muestran la infraestructura abandonada y las marcas en el terreno tras la interrupción abrupta de las operaciones.\n"
-            "Los análisis posteriores confirmaron la presencia de patrones anómalos que no corresponden a ninguna explicación convencional.\n"
-            "A pesar del paso del tiempo, fragmentos del expediente de {tema} han sobrevivido en archivos regionales de difícil acceso.\n"
-            "Observas las fechas y los nombres de las bitácoras y notas que las coincidencias son demasiado precisas para ser casuales.\n"
-            "El archivo concluye con una anotación al margen: El fenómeno permanece sin resolver en la historia oficial."
-        )
+        if duracion == 1:
+            return (
+                f"Examinas las crónicas y registros documentados sobre {tema}.\n"
+                "Los primeros informes oficiales de la época registraron eventos inusuales que desafiaban las explicaciones convencionales.\n"
+                "Testigos presenciales confirmaron la alteración de los hechos minutos antes de que el lugar fuera evacuado.\n"
+                "Los expedientes sobre {tema} permanecen custodiados en el archivo histórico, conservando el misterio para quienes investigan su origen."
+            )
+        elif duracion == 2:
+            return (
+                f"Examinas los expedientes de investigación clasificados en los archivos históricos sobre {tema}.\n"
+                "Todo comenzó cuando los primeros informes de campo registraron alteraciones anómalas que las autoridades de la época intentaron encubrir.\n"
+                "Las transcripciones de las bitácoras revelan pausas heladas y notas enigmáticas dejadas por los investigadores principales.\n"
+                "Fotografías históricas muestran que las evidencias físicas fueron alteradas antes de declarar el caso como cerrado.\n"
+                "Las interrogantes sobre {tema} siguen vigentes hasta el día de hoy, sugiriendo que la historia no ha sido contada en su totalidad.\n"
+                "Y al revisar los registros oficiales, descubres un detalle en las notas al pie que cambia la perspectiva de todo el suceso."
+            )
+        else:
+            return (
+                f"Examinas los expedientes de investigación desclasificados en los archivos históricos sobre {tema}.\n"
+                "Todo comenzó cuando las primeras observaciones anómalas fueron registradas en las bitácoras de campo del equipo de investigación.\n"
+                "Los informes oficiales presentaron discrepancias severas al compararlos con los testimonios originales de los testigos presenciales.\n"
+                "Investigadores clave declararon haber presenciado eventos que desafiaban las explicaciones científicas de la época antes de que el expediente fuera reservado.\n"
+                "En las transcripciones de las cartas y notas manuscritas se mencionan detalles inquietantes que coinciden con incidentes similares registrados años atrás.\n"
+                "Fotografías desclasificadas muestran la infraestructura abandonada y las marcas en el terreno tras la interrupción abrupta de las operaciones.\n"
+                "Los análisis posteriores confirmaron la presencia de patrones anómalos que no corresponden a ninguna explicación convencional.\n"
+                "A pesar del paso del tiempo, fragmentos del expediente de {tema} han sobrevivido en archivos regionales de difícil acceso.\n"
+                "Observas las fechas y los nombres de las bitácoras y notas que las coincidencias son demasiado precisas para ser casuales.\n"
+                "El archivo concluye con una anotación al margen: El fenómeno permanece sin resolver en la historia oficial."
+            )
 
 @app.post("/api/generar-guion")
 async def generar_guion(req: ScriptGenerateRequest):
     tema = req.tema.strip()
     duracion = req.duracion_minutos if req.duracion_minutos in [1, 2, 5] else 1
+    parte = req.parte_serie if req.parte_serie in ["single", "part1", "part2", "part3"] else "single"
+
     if not tema:
         raise HTTPException(status_code=400, detail="El tema no puede estar vacío.")
 
@@ -792,18 +855,18 @@ async def generar_guion(req: ScriptGenerateRequest):
     mock_mode = (not openrouter_key and not nvidia_key) or os.getenv("MOCK_MODE") == "true"
 
     if mock_mode:
-        logger.info(f"[Mock] Generando guion enriquecido con datos reales para {tema} ({duracion} min)...")
-        return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion)}
+        logger.info(f"[Mock] Generando guion enriquecido ({parte}) para {tema} ({duracion} min)...")
+        return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion, parte=parte)}
 
     try:
         client = get_configured_llm_client()
         from src.agents import ResearcherWriterAgent
         writer_agent = ResearcherWriterAgent(client)
-        script_text = await writer_agent.write_script(tema, target_minutes=duracion)
+        script_text = await writer_agent.write_script(tema, target_minutes=duracion, parte_serie=parte)
         return {"tema": tema, "guion": script_text}
     except Exception as e:
-        logger.error(f"Error generando guion vía LLM ({e}). Usando guion de respaldo enriquecido de {duracion} min...")
-        return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion)}
+        logger.error(f"Error generando guion vía LLM ({e}). Usando guion de respaldo enriquecido ({parte})...")
+        return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion, parte=parte)}
 
 @app.post("/api/guardar-guion-temp")
 async def guardar_guion_temp(req: SaveTempScriptRequest):

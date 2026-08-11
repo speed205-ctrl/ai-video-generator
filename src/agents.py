@@ -158,21 +158,40 @@ class ResearcherWriterAgent:
             "9. PROHIBICIÓN ABSOLUTA DE CLICHÉS GENÉRICOS O VACÍOS: Queda ESTRICTAMENTE PROHIBIDO usar plantillas genéricas sobre 'cargar un ejecutable' o 'pantallas verdes pálidas' salvo que el tema trate literalmente sobre software informático. DEBES INCLUIR HECHOS REALES, FECHAS CONCRETAS, NOMBRES PROPIOS, LUGARES GEOGRÁFICOS Y DETALLES FORENSES/TÉCNICOS ESPECÍFICOS DEL TEMA SOLICITADO (ejemplo: para el Paso Dyatlov, cita a los 9 excursionistas soviéticos en 1959 en los Urales, las tiendas rajadas desde dentro a -30°C, las costillas fracturadas sin lesión externa y la radiación en la ropa). Todo el valor narrativo depende de los hechos históricos verídicos y profundos presentados."
         )
 
-    async def write_script(self, topic: str, target_minutes: int = 1) -> str:
+    async def write_script(self, topic: str, target_minutes: int = 1, parte_serie: str = "single") -> str:
         word_targets = {
             1: "aproximadamente 160 palabras (para un video de 1 minuto / Reel / Short)",
             2: "aproximadamente 330 palabras (para un video extenso de 2 minutos)",
             5: "aproximadamente 800 palabras (para un documental completo de 5 minutos con desarrollo profundo de 3 actos)"
         }
         word_guide = word_targets.get(target_minutes, f"aproximadamente {target_minutes * 160} palabras")
-        
+
+        part_instructions = {
+            "part1": (
+                "ESTRUCTURA DE SERIE - PARTE 1:\n"
+                "- Enfoque: Presenta el planteamiento fascinante del misterio, los nombres/lugares reales y la trampa o anomalía inicial.\n"
+                "- CLIFFHANGER OBLIGATORIO: NUNCA resuelvas la historia en este video. DEBES terminar en el punto culminante de suspenso e incomodidad con una invitación orgánica a ver la Parte 2 (ejemplo: 'Pero lo que descubrieron dentro de la cabaña congelada cambiaría la historia para siempre... Sígueme para ver la Parte 2 ahora mismo.')."
+            ),
+            "part2": (
+                "ESTRUCTURA DE SERIE - PARTE 2:\n"
+                "- Enfoque: Inicia recordando brevemente el suspenso inicial y adéntrate de lleno en el desarrollo de la tragedia, la paranoia o las evidencias físicas brutales.\n"
+                "- CLIFFHANGER OBLIGATORIO: Termina en seco en el clímax previo a la revelación moderna o autopsias finales, invitando a ver la Parte 3."
+            ),
+            "part3": (
+                "ESTRUCTURA DE SERIE - PARTE 3 (DESENLACE):\n"
+                "- Enfoque: Revela las investigaciones modernas, autopsias o descubrimientos recientes y concluye con la rotura de la cuarta pared y el bucle del abismo."
+            )
+        }
+        series_guide = part_instructions.get(parte_serie, "ESTRUCTURA: Historia completa autocontenida.")
+
         user_prompt = (
             f"Tema del documental/enigma de GlitchLabz: '{topic}'.\n"
-            f"DURACIÓN REQUERIDA: {target_minutes} minuto(s) ({word_guide}).\n\n"
+            f"DURACIÓN REQUERIDA: {target_minutes} minuto(s) ({word_guide}).\n"
+            f"{series_guide}\n\n"
             "INSTRUCCIONES DE EXTENSIÓN Y PROFUNDIDAD NARRATIVA:\n"
-            f"1. Debes generar un guion con la extensión real correspondiente a {target_minutes} minuto(s). No resumas ni recortes la historia.\n"
-            "2. Incluye detalles concretos, nombres históricos o de usuarios, marcas de tiempo, mensajes de registros y giros psicológicos profundos.\n"
-            "3. Mantén la narración exclusivamente en segunda persona ('tú') y respeta la estructura del Bucle del Abismo.\n\n"
+            f"1. Debes generar un guion con la extensión real correspondiente a {target_minutes} minuto(s). No resumas ni recortes la historia de forma abstracta.\n"
+            "2. Incluye hechos verídicos concretos (nombres históricos, fechas, lugares, marcas de tiempo, datos forenses/técnicos).\n"
+            "3. Mantén la narración exclusivamente en segunda persona ('tú').\n\n"
             "Escribe el guion completo ahora:"
         )
         return await self.client.generate_chat(

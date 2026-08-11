@@ -152,6 +152,19 @@
               <option value="5" selected>⏱️ 5 Minutos (Documental YouTube)</option>
             </select>
           </div>
+
+          <div class="flex items-center gap-2">
+            <label for="series-part-select" class="text-xs text-gray-400 font-mono select-none">Serie:</label>
+            <select 
+              id="series-part-select" 
+              class="bg-dark-950 border border-white/10 text-cyan-400 text-xs font-mono rounded px-2.5 py-1 focus:border-cyan-500 focus:outline-none cursor-pointer"
+            >
+              <option value="single" selected>🎬 Video Único</option>
+              <option value="part1">🔥 Parte 1 (Hook + Cliffhanger)</option>
+              <option value="part2">⚡ Parte 2 (Nudo + Revelación)</option>
+              <option value="part3">🏁 Parte 3 (Desenlace)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -864,13 +877,15 @@
       try {
         const durSelect = document.getElementById('script-duration-select');
         const duracionMinutos = durSelect ? parseInt(durSelect.value) : 5;
+        const partSelect = document.getElementById('series-part-select');
+        const parteSerie = partSelect ? partSelect.value : 'single';
 
         const response = await fetch('/api/generar-guion', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ tema: topic, duracion_minutos: duracionMinutos })
+          body: JSON.stringify({ tema: topic, duracion_minutos: duracionMinutos, parte_serie: parteSerie })
         });
 
         if (!response.ok) {
