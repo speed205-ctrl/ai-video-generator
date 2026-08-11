@@ -179,7 +179,19 @@
           <!-- Tab Actions -->
           <div class="pb-2">
             <!-- Generator Actions -->
-            <div id="generator-actions" class="flex items-center">
+            <div id="generator-actions" class="flex items-center gap-2">
+              <select 
+                id="idea-category-select" 
+                class="bg-dark-950 border border-white/10 text-cyan-400 text-xs font-mono rounded px-2.5 py-1 focus:border-cyan-500 focus:outline-none cursor-pointer"
+              >
+                <option value="todos" selected>🎲 Todos los Nichos</option>
+                <option value="gaming">💻 Internet y Gaming</option>
+                <option value="historia">🏛️ Historia Oscura</option>
+                <option value="ciencia">🛸 Ciencia y Espacio</option>
+                <option value="aviacion">✈️ Aviación y Naval</option>
+                <option value="tecnologia">🔐 IA y Criptografía</option>
+              </select>
+
               <button 
                 onclick="generateIdeas()" 
                 id="btn-ideas"
@@ -544,7 +556,9 @@
       `;
 
       try {
-        const response = await fetch('/api/ideas');
+        const catSelect = document.getElementById('idea-category-select');
+        const categoria = catSelect ? catSelect.value : 'todos';
+        const response = await fetch(`/api/ideas?categoria=${encodeURIComponent(categoria)}`);
         if (!response.ok) throw new Error('Failed to generate ideas');
         const data = await response.json();
         

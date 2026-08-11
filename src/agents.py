@@ -302,18 +302,31 @@ class IdeaGeneratorAgent:
             "}"
         )
 
-    async def generate_ideas(self, existing_topics: List[str]) -> List[Dict[str, str]]:
-        logger.info(f"Generating 5 new ideas. Excluding topics: {existing_topics}")
+    async def generate_ideas(self, existing_topics: List[str], category: Optional[str] = None) -> List[Dict[str, str]]:
+        logger.info(f"Generating 5 new ideas (Category: {category}). Excluding topics: {existing_topics}")
         
+        category_prompts = {
+            "gaming": "Misterios de internet, lost media, creepypastas y mitos oscuros de videojuegos cancelados o glitches.",
+            "historia": "Historia oscura, eventos sin resolver, expediciones trágicas y anomalías de la humanidad.",
+            "ciencia": "Enigmas científicos, física teórica, espacio profundo, señales astronómicas y cifrado.",
+            "aviacion": "Desapariciones de aviación, anomalías navales en alta mar y buques fantasma.",
+            "tecnologia": "Inteligencia artificial conspiranoica, protocolos de red secretos y enigmas criptográficos."
+        }
+        nicho_especifico = category_prompts.get(category, "Cualquiera de los siguientes nichos: tecnología oscura, historia enigmatica, anomalías digitales, ciencia o aviación.")
+
         # Format existing topics list
         formatted_list = "\n".join([f"- {topic}" for topic in existing_topics]) if existing_topics else "Ninguno (esta es la primera ejecución)."
         
-        user_prompt = f"Temas ya trabajados en el pasado (EXCLUIR COMPLETAMENTE):\n{formatted_list}\n\nGenera 5 nuevas ideas oscuras ahora."
+        user_prompt = (
+            f"NICHO TEMÁTICO PRIORITARIO: {nicho_especifico}\n\n"
+            f"Temas ya trabajados en el pasado (EXCLUIR COMPLETAMENTE):\n{formatted_list}\n\n"
+            "Genera 5 nuevas ideas oscuras y fascinantes completamente distintas a las anteriores ahora."
+        )
         
         response_text = await self.client.generate_chat(
             system_prompt=self.system_prompt,
             user_prompt=user_prompt,
-            temperature=0.85
+            temperature=0.95
         )
         
         try:

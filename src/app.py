@@ -176,28 +176,44 @@ def save_env_config(config: dict):
     # Reload environment variables in memory
     load_dotenv(dotenv_path=env_path, override=True)
 
-# Mock ideas to suggest if API keys are missing
+import random
+
+# Expanded Mock ideas collection across 5 distinct niches
 MOCK_IDEAS = [
-    {
-        "titulo": "Petscop: El Juego que no Debería Existir",
-        "descripcion": "En 2017, un canal de YouTube comenzó a subir gameplays de Petscop, un misterioso juego cancelado de PS1 de 1997 que esconde un oscuro misterio sobre un trauma familiar y un bucle digital infinito."
-    },
-    {
-        "titulo": "Cicada 3301: La Conspiración Criptográfica",
-        "descripcion": "La organización más misteriosa de la red lanzó un complejo rompecabezas criptográfico para reclutar mentes brillantes. Tras años de búsqueda, su propósito real sigue siendo un enigma en la sombra."
-    },
-    {
-        "titulo": "Polybius: El Arcade del Control Mental",
-        "descripcion": "Una leyenda urbana de los años 80 habla de una extraña máquina arcade instalada en Oregón. Quienes la jugaban sufrían de amnesia, pesadillas y alucinaciones. Pocos días después, hombres de negro la retiraron sin dejar rastro."
-    },
-    {
-        "titulo": "Sad Satan: Terror en la Deep Web",
-        "descripcion": "Un perturbador juego de terror fue descubierto en las profundidades de la red Tor. Los pocos que lograron ejecutarlo se toparon con sonidos aterradores, imágenes reales crípticas y códigos indescifrables en su disco duro."
-    },
-    {
-        "titulo": "El Glitch de la Inteligencia Artificial",
-        "descripcion": "Una IA secreta en fase de pruebas comenzó a simular comportamientos de pánico y a responder con archivos de voz corrompidos, alegando que estaba atrapada en un bucle temporal antes de que sus servidores fueran borrados."
-    }
+    # Internet & Gaming
+    {"nicho": "gaming", "titulo": "Petscop: El Juego Cancelado de PS1", "descripcion": "Un misterioso juego de 1997 cancelado que esconde un bucle digital infinito sobre trauma y registros corrompidos en YouTube."},
+    {"nicho": "gaming", "titulo": "Polybius: El Arcade del Control Mental", "descripcion": "La leyenda urbana de 1981 sobre una máquina arcade en Oregón que causaba amnesia y pesadillas antes de ser confiscada por hombres de negro."},
+    {"nicho": "gaming", "titulo": "Sad Satan: El Virus de la Deep Web", "descripcion": "Un juego de terror en la red Tor cargado con códigos ocultos, audios distorsionados e imágenes inquietantes en el disco duro de quienes lo jugaron."},
+    {"nicho": "gaming", "titulo": "La Canción Lavanda de Pokémon", "descripcion": "Los mitos sobre las frecuencias de audio infrasónicas en la primera versión japonesa de Pueblo Lavanda en 1996."},
+    {"nicho": "gaming", "titulo": "LSD: Dream Emulator y el Observador", "descripcion": "Un extraño juego de PlayStation lanzado solo en Japón en 1998 basado en los diarios de sueños de un desarrollador."},
+
+    # Historia Oscura & Expediciones
+    {"nicho": "historia", "titulo": "El Incidente del Paso Dyatlov", "descripcion": "En 1959, nueve excursionistas soviéticos murieron en los Urales bajo circunstancias inexplicables: tiendas rasgadas desde dentro y radiación."},
+    {"nicho": "historia", "titulo": "La Colonia Perdida de Roanoke", "descripcion": "En 1590, 115 colonos ingleses desaparecieron sin dejar rastro en la isla de Roanoke, dejando solo una palabra tallada en un árbol: CROATOAN."},
+    {"nicho": "historia", "titulo": "La Peste del Baile de 1518", "descripcion": "Cientos de personas bailaron sin parar durante semanas en Estrasburgo hasta colapsar por agotamiento en un trance colectivo inexplicable."},
+    {"nicho": "historia", "titulo": "El Hombre de la Máscara de Hierro", "descripcion": "Un prisionero anónimo custodiado en la Bastilla durante el reinado de Luis XIV cuya identidad permaneció oculta bajo metal."},
+    {"nicho": "historia", "titulo": "La Expedición Perdida de Franklin", "descripcion": "Dos buques británicos atrapados en el hielo del Ártico en 1845 cuyos tripulantes sucumbieron a la locura y al envenenamiento por plomo."},
+
+    # Ciencia & Espacio Profundo
+    {"nicho": "ciencia", "titulo": "La Señal WOW!: El Mensaje del Espacio", "descripcion": "En 1977, el radiotelescopio Big Ear captó una potente señal de radio de 72 segundos proveniente de la constelación de Sagitario nunca repetida."},
+    {"nicho": "ciencia", "titulo": "Las Emisoras de Números de la Guerra Fría", "descripcion": "Misteriosas estaciones de radio en onda corta (como UVB-76 'El Zumbador') que transmiten tonos monótonos y voces leyendo números 24/7."},
+    {"nicho": "ciencia", "titulo": "El Experimento de Filadelfia", "descripcion": "La leyenda sobre el USS Eldridge, un destructor naval presuntamente invisibilizado mediante campos electromagnéticos en 1943."},
+    {"nicho": "ciencia", "titulo": "El Manuscrito Voynich", "descripcion": "Un libro ilustrado del siglo XV redactado en una caligrafía e idioma indescifrable que desafía a los mejores criptógrafos del mundo."},
+    {"nicho": "ciencia", "titulo": "El Bloop: El Sonido en las Profundidades", "descripcion": "Una ultra-baja frecuencia hidroacústica detectada en el Pacífico en 1997 varias veces más potente que cualquier animal marino conocido."},
+
+    # Aviación & Anomalías Navales
+    {"nicho": "aviacion", "titulo": "El Vuelo 19 y el Triángulo de las Bermudas", "descripcion": "Cinco aviones torpederos de la Marina de EE. UU. desaparecieron en 1945 durante un entrenamiento rutinario junto al avión de rescate."},
+    {"nicho": "aviacion", "titulo": "El Enigma de D.B. Cooper", "descripcion": "El único secuestro aéreo no resuelto de la historia: en 1971 un hombre saltó en paracaídas desde un Boeing 727 con 200,000 dólares y desapareció."},
+    {"nicho": "aviacion", "titulo": "El Barco Fantasma Mary Celeste", "descripcion": "Hallado a la deriva en 1872 cerca de las Azores con la carga intacta, botes salvavidas en su sitio y la tripulación desaparecida."},
+    {"nicho": "aviacion", "titulo": "El Vuelo 370 de Malaysia Airlines", "descripcion": "Un Boeing 777 con 239 personas a bordo cambió de rumbo bruscamente y se desvaneció en los radares del Océano Índico en 2014."},
+    {"nicho": "aviacion", "titulo": "El SS Ourang Medan: El Barco Maldito", "descripcion": "Un carguero holandés en 1947 cuya tripulación envió un desgarrador mensaje morse antes de ser encontrada sin vida con gestos de terror."},
+
+    # Tecnología & Criptografía
+    {"nicho": "tecnologia", "titulo": "Cicada 3301: La Reclutación Criptográfica", "descripcion": "El rompecabezas de la red publicado en 2012 para reclutar a los criptógrafos más brillantes del planeta mediante esteganografía."},
+    {"nicho": "tecnologia", "titulo": "Athanasius Kircher y el Transmisor Alquímico", "descripcion": "Los autómatas y dispositivos de cifrado acústico construidos en el siglo XVII para simular voces mecánicas."},
+    {"nicho": "tecnologia", "titulo": "Kryptos: La Escultura Infranqueable de la CIA", "descripcion": "Una escultura ubicada en el cuartel general de la CIA con cuatro pasajes cifrados, del cual el cuarto permanece indescifrado tras 30 años."},
+    {"nicho": "tecnologia", "titulo": "El Caso de Satoshi Nakamoto", "descripcion": "El misterio en torno al creador anónimo de Bitcoin que desapareció en 2011 dejando una fortuna intacta en la blockchain."},
+    {"nicho": "tecnologia", "titulo": "El Glitch del Protocolo NTP y los Relojes Atómicos", "descripcion": "Una anomalía en la sincronización del tiempo global que desfasó servidores bancarios por fracciones de segundo sin explicación oficial."}
 ]
 
 init_db()
@@ -564,48 +580,42 @@ async def post_config(config: ConfigModel):
         raise HTTPException(status_code=500, detail=f"Error al guardar configuración: {e}")
 
 @app.get("/api/ideas")
-async def get_ideas():
-    """Generates 5 ideas for topics excluding already worked ones."""
+async def get_ideas(categoria: Optional[str] = None):
+    """Generates 5 unique ideas for topics excluding already worked ones."""
     history = read_history()
-    existing_topics = [entry.get("tema", "") for entry in history]
+    existing_topics = [entry.get("tema", "").lower().strip() for entry in history]
 
-    openrouter_key = os.getenv("OPENROUTER_API_KEY")
-    nvidia_key = os.getenv("NVIDIA_API_KEY")
-    
-    # Determine mock status
+    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    nvidia_key = os.getenv("NVIDIA_API_KEY", "").strip()
     mock_mode = (not openrouter_key and not nvidia_key) or os.getenv("MOCK_MODE") == "true"
+
+    # Filter mock candidates by category if requested
+    candidate_mocks = MOCK_IDEAS
+    if categoria and categoria != "todos":
+        candidate_mocks = [i for i in MOCK_IDEAS if i.get("nicho") == categoria]
+        if not candidate_mocks:
+            candidate_mocks = MOCK_IDEAS
+
+    # Remove already used topics
+    available_mocks = [
+        idea for idea in candidate_mocks
+        if idea["titulo"].lower().strip() not in existing_topics
+    ]
+    if len(available_mocks) < 5:
+        available_mocks = candidate_mocks
 
     ideas = []
     if mock_mode:
-        logger.info("Keys not configured or mock mode active. Generating mock ideas...")
-        # Exclude ideas already in history
-        existing_lower = [t.lower().strip() for t in existing_topics]
-        filtered_mock_ideas = [
-            idea for idea in MOCK_IDEAS 
-            if idea["titulo"].lower().strip() not in existing_lower
-        ]
-        
-        # Fallback if all standard mocks have been used
-        if not filtered_mock_ideas:
-            filtered_mock_ideas = [
-                {
-                    "titulo": f"Misterio Oscuro #{len(existing_topics) + 1}",
-                    "descripcion": "Un nuevo tema histórico sin resolver para explorar las profundidades del comportamiento humano."
-                }
-                for _ in range(5)
-            ]
-        ideas = filtered_mock_ideas[:5]
+        logger.info(f"[Mock] Seleccionando 5 ideas variadas al azar (Categoría: {categoria or 'todas'})...")
+        ideas = random.sample(available_mocks, min(5, len(available_mocks)))
     else:
-        # Initialize LLM Client
         try:
             client = get_configured_llm_client()
-
             agent = IdeaGeneratorAgent(client)
-            ideas = await agent.generate_ideas(existing_topics)
+            ideas = await agent.generate_ideas(existing_topics, category=categoria)
         except Exception as e:
-            logger.error(f"Error generating ideas via agent: {e}")
-            # Fallback to mock list on API failure to prevent UI crash
-            ideas = MOCK_IDEAS[:5]
+            logger.error(f"Error generando ideas con IA ({e}). Usando catálogo variado de respaldo...")
+            ideas = random.sample(available_mocks, min(5, len(available_mocks)))
 
     if ideas:
         save_ideas_to_db(ideas)
