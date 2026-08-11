@@ -52,21 +52,15 @@ async def process_scene(
     idx: int,
     output_dir: str,
     tts_client: Optional[ElevenLabsClient],
-    image_client: Optional[NvidiaImageClient],
-    mock_mode: bool
-) -> dict:
-    """
-    Downloads the audio and image for a single scene with rate limit protection
-    controlled by a semaphore.
-    """
-    scene_text = scene.get("texto", "")
-    scene_prompt = scene.get("prompt_imagen", "")
-    scene_effect = scene.get("efecto_capcut", "Zoom in")
-    scene_num = scene.get("numero", idx + 1)
+async def process_scene(scene_data: dict, output_dir: str, tts_client, image_client, sem: asyncio.Semaphore, mock_mode: bool = False, aspect_ratio: str = "16:9") -> dict:
+    scene_num = scene_data["numero_escena"]
+    scene_text = scene_data["texto"]
+    scene_prompt = scene_data["prompt_imagen"]
+    scene_effect = scene_data.get("efecto_capcut", "zoom_in")
     
     audio_filename = f"escena_{scene_num:02d}.mp3"
     image_filename = f"escena_{scene_num:02d}.png"
-    prompt_filename = f"escena_{scene_num:02d}.txt"
+    prompt_filename = f"prompt_{scene_num:02d}.txt"
     
     audio_path = os.path.join(output_dir, "audios", audio_filename)
     image_path = os.path.join(output_dir, "imagenes", image_filename)
@@ -132,6 +126,7 @@ async def process_scene(
                     wav_file.writeframes(b'\x00\x00' * int(44100 * duration_est))
 
         # 2. Download Image
+        img_dim = (576, 1024) if aspect_ratio == "9:16" else (1024, 576)
         image_exists_valid = os.path.exists(image_path) and os.path.getsize(image_path) > 10000
         if image_exists_valid:
             logger.info(f"[Escena {scene_num}] Reutilizando imagen existente ({os.path.getsize(image_path)} bytes).")
@@ -139,17 +134,17 @@ async def process_scene(
             logger.info(f"[Mock] Creando imagen mock para escena {scene_num}")
             os.makedirs(os.path.dirname(image_path), exist_ok=True)
             from PIL import Image
-            Image.new('RGB', (1024, 576), color='black').save(image_path)
+            Image.new('RGB', img_dim, color='black').save(image_path)
         else:
             try:
-                await image_client.generate_image(scene_prompt, image_path)
+                await image_client.generate_image(scene_prompt, image_path, aspect_ratio=aspect_ratio)
                 logger.info(f"[Escena {scene_num}] Imagen descargada exitosamente.")
             except Exception as e:
                 logger.error(f"[Escena {scene_num}] Error al descargar imagen: {e}")
                 logger.warning(f"[Escena {scene_num}] Creando imagen placeholder negra debido a fallo de API.")
                 os.makedirs(os.path.dirname(image_path), exist_ok=True)
                 from PIL import Image
-                Image.new('RGB', (1024, 576), color='black').save(image_path)
+                Image.new('RGB', img_dim, color='black').save(image_path)
 
     # 3. Calculate exact duration using mutagen, fallback to words estimation if mutagen fails/mock
     duration = 5.0  # default
@@ -751,6 +746,8 @@ async def main_async(args):
             logger.error(f"Error en Agente de Prompts: {e}")
             sys.exit(1)
 
+    aspect_ratio = getattr(args, "aspect_ratio", "16:9")
+
     # --- AGENT 3: EXECUTOR AND ASYNC DOWNLOADS (CONCURRENCY CONTROL = 2) ---
     logger.info("Iniciando descargas de recursos con control de concurrencia (Semaphore = 2)...")
     sem = asyncio.Semaphore(2)
@@ -759,13 +756,13 @@ async def main_async(args):
     for idx, scene in enumerate(scenes):
         tasks.append(
             process_scene(
-                sem=sem,
-                scene=scene,
-                idx=idx,
+                scene_data=scene,
                 output_dir=output_dir,
                 tts_client=tts_client,
                 image_client=image_client,
-                mock_mode=mock_mode
+                sem=sem,
+                mock_mode=mock_mode,
+                aspect_ratio=aspect_ratio
             )
         )
         
@@ -803,6 +800,7 @@ async def main_async(args):
     # Build Escaleta Structure
     escaleta = {
         "tema": topic,
+        "aspect_ratio": aspect_ratio,
         "fecha_creacion": datetime.now().isoformat(),
         "total_escenas": len(final_scenes),
         "duracion_total_segundos": round(current_time, 3),
@@ -822,6 +820,15 @@ async def main_async(args):
         f.write("\n\n".join(prompts_list))
     logger.info(f"Lista consolidada de prompts de imágenes guardada en: {prompts_txt_path}")
         
+    # Export CapCut Desktop Draft automatically
+    try:
+        from src.exporters.capcut_draft import CapCutDraftExporter
+        exporter = CapCutDraftExporter(aspect_ratio=aspect_ratio)
+        draft_path = exporter.export_project(output_dir)
+        logger.info(f"Borrador de CapCut Desktop ({aspect_ratio}) generado en: {draft_path}")
+    except Exception as draft_err:
+        logger.warning(f"No se pudo exportar automáticamente el borrador de CapCut: {draft_err}")
+
     # Compile final video (.mp4) using MoviePy (skip in mock mode since audio files are empty/invalid)
     video_path = None
     if not mock_mode:
@@ -851,6 +858,7 @@ def main():
     parser.add_argument("--mock", action="store_true", help="Ejecutar en modo simulación (sin llamar a APIs reales).")
     parser.add_argument("--guion_path", type=str, default=None, help="Ruta al archivo de guion ya redactado/editado.")
     parser.add_argument("--subtitulos", action="store_true", help="Quemar subtítulos automáticos en el video.")
+    parser.add_argument("--aspect-ratio", choices=["16:9", "9:16"], default="16:9", help="Relación de aspecto del video (16:9 o 9:16).")
     
     args = parser.parse_args()
     

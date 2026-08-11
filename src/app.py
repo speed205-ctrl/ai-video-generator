@@ -739,13 +739,14 @@ async def websocket_ejecutar(websocket: WebSocket):
     tema = params.get("tema", "").strip()
     guion_path = params.get("guion_path", "").strip()
     subtitulos = params.get("subtitulos", "false").lower() == "true"
+    aspect_ratio = params.get("aspect_ratio", "16:9").strip()
     
     if not tema:
         await websocket.send_text("[System Error] No topic specified.")
         await websocket.close()
         return
 
-    logger.info(f"WebSocket client connected. Launching documentary generation for topic: '{tema}', custom script: {bool(guion_path)}, subtitles: {subtitulos}")
+    logger.info(f"WebSocket client connected. Launching documentary generation for topic: '{tema}', custom script: {bool(guion_path)}, subtitles: {subtitulos}, aspect_ratio: {aspect_ratio}")
     
     # Determine if we should run the script in mock mode
     openrouter_key = os.getenv("OPENROUTER_API_KEY")
@@ -760,7 +761,7 @@ async def websocket_ejecutar(websocket: WebSocket):
     main_script_path = os.path.join(project_dir, "src", "main.py")
     
     # Build python execution command
-    cmd = [sys.executable, main_script_path, "--tema", tema]
+    cmd = [sys.executable, main_script_path, "--tema", tema, "--aspect-ratio", aspect_ratio]
     if guion_path:
         cmd.extend(["--guion_path", guion_path])
     if subtitulos:

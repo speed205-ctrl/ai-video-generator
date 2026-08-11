@@ -117,17 +117,29 @@
             id="btn-lanzar"
             class="bg-cyan-700 hover:bg-cyan-600 text-white font-semibold text-sm px-5 py-2 rounded-lg transition duration-200 shadow-md font-mono flex items-center gap-2"
           >
-            Lanzar Video
-          </button>
+            </button>
         </div>
-        <div class="flex items-center gap-2 mt-3 pl-1">
-          <input 
-            type="checkbox" 
-            id="burn-subtitles" 
-            class="rounded border-white/10 bg-dark-950 text-cyan-500 focus:ring-0 focus:ring-offset-0 h-4 w-4"
-            checked
-          >
-          <label for="burn-subtitles" class="text-xs text-gray-400 font-mono select-none cursor-pointer hover:text-gray-300">Quemar subtítulos automáticos en el video</label>
+        <div class="flex flex-wrap items-center gap-6 mt-3 pl-1">
+          <div class="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="burn-subtitles" 
+              class="rounded border-white/10 bg-dark-950 text-cyan-500 focus:ring-0 focus:ring-offset-0 h-4 w-4"
+              checked
+            >
+            <label for="burn-subtitles" class="text-xs text-gray-400 font-mono select-none cursor-pointer hover:text-gray-300">Quemar subtítulos automáticos</label>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <label for="aspect-ratio-select" class="text-xs text-gray-400 font-mono select-none">Formato:</label>
+            <select 
+              id="aspect-ratio-select" 
+              class="bg-dark-950 border border-white/10 text-cyan-400 text-xs font-mono rounded px-2.5 py-1 focus:border-cyan-500 focus:outline-none cursor-pointer"
+            >
+              <option value="16:9" selected>📺 Horizontal (16:9 YouTube)</option>
+              <option value="9:16">📱 Vertical (9:16 Reels / Shorts / TikTok)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -884,8 +896,10 @@
         fetchHistory(); // Refresh history list
 
         const subtitulos = document.getElementById('burn-subtitles').checked;
+        const aspectRatioSelect = document.getElementById('aspect-ratio-select');
+        const aspectRatio = aspectRatioSelect ? aspectRatioSelect.value : '16:9';
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        let wsUrl = `${protocol}//${window.location.host}/api/ws/ejecutar?tema=${encodeURIComponent(topic)}&subtitulos=${subtitulos}`;
+        let wsUrl = `${protocol}//${window.location.host}/api/ws/ejecutar?tema=${encodeURIComponent(topic)}&subtitulos=${subtitulos}&aspect_ratio=${encodeURIComponent(aspectRatio)}`;
         if (guionPath) {
           wsUrl += `&guion_path=${encodeURIComponent(guionPath)}`;
         }
