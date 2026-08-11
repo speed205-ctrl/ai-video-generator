@@ -111,7 +111,7 @@ class LLMClient:
         self.default_model = default_model
         self.local_fallback = LocalOllamaClient() if enable_local_fallback else None
 
-    async def _raw_generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7) -> str:
+    async def _raw_generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: Optional[int] = None) -> str:
         model_name = model or self.default_model
         url = f"{self.base_url}/chat/completions"
         
@@ -132,6 +132,8 @@ class LLMClient:
             ],
             "temperature": temperature
         }
+        if max_tokens:
+            payload["max_tokens"] = max_tokens
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=90)) as response:
@@ -143,10 +145,10 @@ class LLMClient:
                 result = await response.json()
                 return result["choices"][0]["message"]["content"]
 
-    async def generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7) -> str:
+    async def generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: Optional[int] = None) -> str:
         try:
             return await _async_retry(
-                self._raw_generate_chat, system_prompt, user_prompt, model=model, temperature=temperature
+                self._raw_generate_chat, system_prompt, user_prompt, model=model, temperature=temperature, max_tokens=max_tokens
             )
         except Exception as e:
             if self.local_fallback:

@@ -1259,7 +1259,7 @@ async def probar_api_llm(req: ApiTestRequest):
         else:
             client = LLMClient(api_key=key, base_url="https://openrouter.ai/api/v1", default_model="meta-llama/llama-3.1-405b-instruct")
         
-        res = await client.generate_chat("Responde solo OK", "Ping", max_tokens=5)
+        res = await client.generate_chat("Responde solo OK", "Ping")
         latency = int((time.time() - start) * 1000)
         return {"status": "success", "mensaje": f"Conexión exitosa ({latency}ms)", "latencia_ms": latency, "respuesta": res[:50]}
     except Exception as e:
