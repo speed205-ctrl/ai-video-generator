@@ -46,12 +46,6 @@ def format_timestamp(seconds: float) -> str:
     millis = int((seconds - int(seconds)) * 100)
     return f"{mins:02d}:{secs:02d}.{millis:02d}"
 
-async def process_scene(
-    sem: asyncio.Semaphore,
-    scene: dict,
-    idx: int,
-    output_dir: str,
-    tts_client: Optional[ElevenLabsClient],
 async def process_scene(scene_data: dict, output_dir: str, tts_client, image_client, sem: asyncio.Semaphore, mock_mode: bool = False, aspect_ratio: str = "16:9") -> dict:
     scene_num = scene_data["numero_escena"]
     scene_text = scene_data["texto"]
