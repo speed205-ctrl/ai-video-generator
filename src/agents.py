@@ -157,8 +157,23 @@ class ResearcherWriterAgent:
             "   - FASE 5: CUARTA PARED Y LOOP ALGORÍTMICO (85% - 100% del guion): Rompe la cuarta pared apelando directamente al espectador (tú) en su pantalla. Diseña la última línea del guion para que enlace de forma perfecta y fluida con la primera línea del hook, creando un bucle infinito que invite a volver a verlo."
         )
 
-    async def write_script(self, topic: str) -> str:
-        user_prompt = f"Tema para el enigma digital/mitología de internet/gaming de GlitchLabz: {topic}\nEscribe el guion completo ahora."
+    async def write_script(self, topic: str, target_minutes: int = 1) -> str:
+        word_targets = {
+            1: "aproximadamente 160 palabras (para un video de 1 minuto / Reel / Short)",
+            2: "aproximadamente 330 palabras (para un video extenso de 2 minutos)",
+            5: "aproximadamente 800 palabras (para un documental completo de 5 minutos con desarrollo profundo de 3 actos)"
+        }
+        word_guide = word_targets.get(target_minutes, f"aproximadamente {target_minutes * 160} palabras")
+        
+        user_prompt = (
+            f"Tema del documental/enigma de GlitchLabz: '{topic}'.\n"
+            f"DURACIÓN REQUERIDA: {target_minutes} minuto(s) ({word_guide}).\n\n"
+            "INSTRUCCIONES DE EXTENSIÓN Y PROFUNDIDAD NARRATIVA:\n"
+            f"1. Debes generar un guion con la extensión real correspondiente a {target_minutes} minuto(s). No resumas ni recortes la historia.\n"
+            "2. Incluye detalles concretos, nombres históricos o de usuarios, marcas de tiempo, mensajes de registros y giros psicológicos profundos.\n"
+            "3. Mantén la narración exclusivamente en segunda persona ('tú') y respeta la estructura del Bucle del Abismo.\n\n"
+            "Escribe el guion completo ahora:"
+        )
         return await self.client.generate_chat(
             system_prompt=self.system_prompt,
             user_prompt=user_prompt,

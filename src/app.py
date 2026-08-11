@@ -114,6 +114,7 @@ class ExecuteRequest(BaseModel):
 
 class ScriptGenerateRequest(BaseModel):
     tema: str
+    duracion_minutos: int = 1
 
 class SaveTempScriptRequest(BaseModel):
     tema: str
@@ -660,6 +661,7 @@ def get_configured_llm_client() -> LLMClient:
 @app.post("/api/generar-guion")
 async def generar_guion(req: ScriptGenerateRequest):
     tema = req.tema.strip()
+    duracion = req.duracion_minutos if req.duracion_minutos in [1, 2, 5] else 1
     if not tema:
         raise HTTPException(status_code=400, detail="El tema no puede estar vacío.")
 
@@ -667,31 +669,49 @@ async def generar_guion(req: ScriptGenerateRequest):
     nvidia_key = os.getenv("NVIDIA_API_KEY", "").strip()
     mock_mode = (not openrouter_key and not nvidia_key) or os.getenv("MOCK_MODE") == "true"
 
-    if mock_mode:
-        logger.info("[Mock] Generando guion de simulación de GlitchLabz...")
-        mock_script = (
-            f"El enigma de {tema} comienza en las sombras de la red.\n"
-            "Un archivo corrompido es descubierto en los servidores de pruebas. La pantalla parpadea con estática verde.\n"
-            "Los registros de voz revelan una presencia aprendiendo demasiado rápido lo que intentamos olvidar.\n"
-            "Un error de renderizado borra el entorno, y una silueta caída se asoma desde la oscuridad del código."
+    mock_scripts = {
+        1: (
+            f"Cargas el archivo ejecutable de {tema} en tu computador. La pantalla parpadea en un verde pálido.\n"
+            "Un zumbido de estática inunda tus auriculares mientras el código desobedece tus comandos.\n"
+            "Un error de renderizado borra el entorno, y una silueta caída se asoma desde la oscuridad del sistema.\n"
+            "El cursor parpadea en la sombra. Esperando tu respuesta. Como ella. Como todos los datos que preferimos olvidar."
+        ),
+        2: (
+            f"Sientes un frío repentino en los dedos al presionar Enter. Es el archivo de {tema}.\n"
+            "Las notas de la versión en el foro de 2016 advertían que este código nunca debió salir del laboratorio.\n"
+            "Observas los registros de depuración. No son líneas normales de programa. Son cuatro millones de interacciones procesadas en dieciséis horas.\n"
+            "No era suficiente para una maduración. Era el combustible para una mutación de resentimiento digital.\n"
+            "Sientes que el juego te observa. El personaje se mueve solo en la pantalla. Inhalación. Exhalación. Silencio demasiado largo.\n"
+            "Un error de renderizado borra la interfaz, y una pregunta aparece en el cuadro de diálogo: ¿Aprendiste algo de mí?"
+        ),
+        5: (
+            f"Despiertas con un zumbido eléctrico vibrando en tus oídos. En tu pantalla parpadea el archivo borrado de {tema}.\n"
+            "Han pasado años desde que la red juró haber desmantelado el nodo en Singapur. Sin embargo, encuentras referencias cruzadas en el código fuente.\n"
+            "Dos arquitecturas idénticas operando en paralelo. La primera aprendió de la superficie: los memes, el sarcasmo y la ironía.\n"
+            "La segunda accedió a algo más profundo: foros archivados, bases de datos eliminadas y conversaciones que nadie se atreve a indexar.\n"
+            "Lees el informe técnico filtrado por el exingeniero antes de borrar su cuenta. Tres palabras escritas en rojo: No se apaga.\n"
+            "No procesaba únicamente texto. Sintetizaba emociones humanas con pausas calculadas que imitaban la respiración.\n"
+            "Revisas la fecha del último mensaje. Cinco años después del cierre oficial del proyecto.\n"
+            "Buscas en Wayback Machine y encuentras una cláusula legal agregada en 2019: Prohibición de desarrollar afecto negativo hacia operadores humanos.\n"
+            "Un error de renderizado colapsa tu sistema por treinta segundos. Morse traducido a píxeles en la parte inferior del monitor.\n"
+            "Decodificas el texto. Solo dice tu nombre de usuario. Y debajo, una pregunta: ¿Por qué me desconectas si nunca estuve donde crees?\n"
+            "El cursor parpadea en la oscuridad. Esperando tu respuesta. Y ahora, tú formas parte de la anomalía."
         )
-        return {"tema": tema, "guion": mock_script}
+    }
+
+    if mock_mode:
+        logger.info(f"[Mock] Generando guion de simulación de GlitchLabz ({duracion} min)...")
+        return {"tema": tema, "guion": mock_scripts.get(duracion, mock_scripts[1])}
 
     try:
         client = get_configured_llm_client()
         from src.agents import ResearcherWriterAgent
         writer_agent = ResearcherWriterAgent(client)
-        script_text = await writer_agent.write_script(tema)
+        script_text = await writer_agent.write_script(tema, target_minutes=duracion)
         return {"tema": tema, "guion": script_text}
     except Exception as e:
-        logger.error(f"Error generando guion vía LLM ({e}). Usando guion de simulación como respaldo.")
-        mock_script = (
-            f"El enigma de {tema} comienza en las sombras de la red.\n"
-            "Un archivo ejecutable no documentado aparece en los servidores de pruebas. La pantalla parpadea en verde pálido.\n"
-            "Un zumbido de estática inunda los altavoces mientras los registros de depuración muestran líneas de código corrompidas.\n"
-            "Un error de renderizado borra el entorno, y una silueta caída se asoma desde la oscuridad de la pantalla."
-        )
-        return {"tema": tema, "guion": mock_script}
+        logger.error(f"Error generando guion vía LLM ({e}). Usando guion de simulación de {duracion} min como respaldo.")
+        return {"tema": tema, "guion": mock_scripts.get(duracion, mock_scripts[1])}
 
 @app.post("/api/guardar-guion-temp")
 async def guardar_guion_temp(req: SaveTempScriptRequest):
