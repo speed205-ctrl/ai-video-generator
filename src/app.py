@@ -124,6 +124,7 @@ class SaveTempScriptRequest(BaseModel):
 class ApiTestRequest(BaseModel):
     key: Optional[str] = None
     service: str  # "llm", "image", "elevenlabs"
+    url: Optional[str] = None
     model: Optional[str] = None
 
 class ConfigModel(BaseModel):
@@ -1261,14 +1262,18 @@ async def probar_api_llm(req: ApiTestRequest):
     start = time.time()
     try:
         user_model = (req.model or "").strip()
-        if user_model.startswith("http://") or user_model.startswith("https://"):
+        user_url = (req.url or "").strip()
+        if user_url:
+            base_url = user_url
+            target_model = user_model or os.getenv("NVIDIA_MODEL", "").strip() or "meta/llama-3.1-70b-instruct"
+        elif user_model.startswith("http://") or user_model.startswith("https://"):
             base_url = user_model
             target_model = "meta/llama-3.1-70b-instruct"
         elif key.startswith("nvapi-"):
-            base_url = "https://integrate.api.nvidia.com/v1"
+            base_url = os.getenv("NVIDIA_BASE_URL", "").strip() or "https://integrate.api.nvidia.com/v1"
             target_model = user_model or os.getenv("NVIDIA_MODEL", "").strip() or "meta/llama-3.1-70b-instruct"
         else:
-            base_url = "https://openrouter.ai/api/v1"
+            base_url = os.getenv("OPENROUTER_BASE_URL", "").strip() or "https://openrouter.ai/api/v1"
             target_model = user_model or os.getenv("OPENROUTER_MODEL", "").strip() or "google/gemini-2.0-flash-lite-001"
 
         client = LLMClient(api_key=key, base_url=base_url, default_model=target_model)
@@ -1363,24 +1368,36 @@ async def get_config():
         load_dotenv(dotenv_path=env_path, override=True)
         
     return {
-        "OPENROUTER_API_KEY": "Configurada" if os.getenv("OPENROUTER_API_KEY") else "",
-        "OPENROUTER_MODEL": sanitize_model_name(os.getenv("OPENROUTER_MODEL"), "google/gemini-2.0-flash-lite-001"),
         "NVIDIA_API_KEY": "Configurada" if os.getenv("NVIDIA_API_KEY") else "",
+        "NVIDIA_BASE_URL": sanitize_model_name(os.getenv("NVIDIA_BASE_URL"), "https://integrate.api.nvidia.com/v1"),
         "NVIDIA_MODEL": sanitize_model_name(os.getenv("NVIDIA_MODEL"), "meta/llama-3.1-70b-instruct"),
+
+        "OPENROUTER_API_KEY": "Configurada" if os.getenv("OPENROUTER_API_KEY") else "",
+        "OPENROUTER_BASE_URL": sanitize_model_name(os.getenv("OPENROUTER_BASE_URL"), "https://openrouter.ai/api/v1"),
+        "OPENROUTER_MODEL": sanitize_model_name(os.getenv("OPENROUTER_MODEL"), "google/gemini-2.0-flash-lite-001"),
+
         "ELEVENLABS_API_KEY": "Configurada" if os.getenv("ELEVENLABS_API_KEY") else "",
         "ELEVENLABS_VOICE_ID": sanitize_model_name(os.getenv("ELEVENLABS_VOICE_ID"), "N2lVS1w4EtoT3dr4eOWO"),
+
         "NVIDIA_IMAGE_KEY": "Configurada" if os.getenv("NVIDIA_IMAGE_KEY") else "",
+        "NVIDIA_IMAGE_BASE_URL": sanitize_model_name(os.getenv("NVIDIA_IMAGE_BASE_URL"), "https://ai.api.nvidia.com/v1/genai"),
         "NVIDIA_IMAGE_MODEL": sanitize_model_name(os.getenv("NVIDIA_IMAGE_MODEL"), "black-forest-labs/flux-1-schnell")
     }
 
 class SaveConfigRequest(BaseModel):
-    OPENROUTER_API_KEY: Optional[str] = ""
-    OPENROUTER_MODEL: Optional[str] = ""
     NVIDIA_API_KEY: Optional[str] = ""
+    NVIDIA_BASE_URL: Optional[str] = ""
     NVIDIA_MODEL: Optional[str] = ""
+
+    OPENROUTER_API_KEY: Optional[str] = ""
+    OPENROUTER_BASE_URL: Optional[str] = ""
+    OPENROUTER_MODEL: Optional[str] = ""
+
     ELEVENLABS_API_KEY: Optional[str] = ""
     ELEVENLABS_VOICE_ID: Optional[str] = ""
+
     NVIDIA_IMAGE_KEY: Optional[str] = ""
+    NVIDIA_IMAGE_BASE_URL: Optional[str] = ""
     NVIDIA_IMAGE_MODEL: Optional[str] = ""
 
 @app.post("/api/config")
@@ -1395,9 +1412,15 @@ async def save_config(req: SaveConfigRequest):
                     env_vars[k.strip()] = v.strip()
 
     updates = {
-        "OPENROUTER_MODEL": sanitize_model_name(req.OPENROUTER_MODEL, "google/gemini-2.0-flash-lite-001"),
+        "NVIDIA_BASE_URL": sanitize_model_name(req.NVIDIA_BASE_URL, "https://integrate.api.nvidia.com/v1"),
         "NVIDIA_MODEL": sanitize_model_name(req.NVIDIA_MODEL, "meta/llama-3.1-70b-instruct"),
+
+        "OPENROUTER_BASE_URL": sanitize_model_name(req.OPENROUTER_BASE_URL, "https://openrouter.ai/api/v1"),
+        "OPENROUTER_MODEL": sanitize_model_name(req.OPENROUTER_MODEL, "google/gemini-2.0-flash-lite-001"),
+
         "ELEVENLABS_VOICE_ID": sanitize_model_name(req.ELEVENLABS_VOICE_ID, "N2lVS1w4EtoT3dr4eOWO"),
+
+        "NVIDIA_IMAGE_BASE_URL": sanitize_model_name(req.NVIDIA_IMAGE_BASE_URL, "https://ai.api.nvidia.com/v1/genai"),
         "NVIDIA_IMAGE_MODEL": sanitize_model_name(req.NVIDIA_IMAGE_MODEL, "black-forest-labs/flux-1-schnell")
     }
 

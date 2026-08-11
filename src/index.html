@@ -319,30 +319,47 @@
 
       <!-- Modal Body (Form fields) -->
       <div class="flex-1 overflow-y-auto space-y-4 py-4 pr-1 terminal-scroll">
-        <!-- LLM Settings: NVIDIA Cloud & OpenRouter -->
+        <!-- LLM Primary Settings -->
         <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
           <div class="flex justify-between items-center mb-3">
-            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">1. Agente Redactor (LLM - NVIDIA / OpenRouter)</h4>
+            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">1. Agente Redactor Primario (NVIDIA / Cualquier API)</h4>
             <div class="flex items-center gap-2">
               <span id="test-status-llm" class="text-[10px] font-mono"></span>
-              <button type="button" onclick="testApi('llm')" class="bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded text-[11px] font-mono transition">⚡ Probar LLM</button>
+              <button type="button" onclick="testApi('llm')" class="bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded text-[11px] font-mono transition">⚡ Probar LLM Primario</button>
             </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Primary API Key</label>
-              <input type="password" id="cfg-nvidia-key" placeholder="nvapi-..." class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">API Key Primaria</label>
+              <input type="password" id="cfg-nvidia-key" placeholder="nvapi-... o sk-..." class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
             </div>
             <div>
-              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Primary Model</label>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">URL Invocadora (Servidor)</label>
+              <input type="text" id="cfg-nvidia-url" value="https://integrate.api.nvidia.com/v1" placeholder="https://integrate.api.nvidia.com/v1" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">Modelo / Endpoint</label>
               <input type="text" id="cfg-nvidia-model" value="meta/llama-3.1-70b-instruct" placeholder="meta/llama-3.1-70b-instruct" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
             </div>
+          </div>
+        </div>
+
+        <!-- LLM Fallback Settings -->
+        <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">2. Agente Redactor Respaldo (OpenRouter / Secundario)</h4>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">OpenRouter Fallback API Key</label>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">API Key Respaldo</label>
               <input type="password" id="cfg-openrouter-key" placeholder="sk-or-v1-..." class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
             </div>
             <div>
-              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">OpenRouter Model</label>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">URL Invocadora (Servidor)</label>
+              <input type="text" id="cfg-openrouter-url" value="https://openrouter.ai/api/v1" placeholder="https://openrouter.ai/api/v1" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">Modelo / Endpoint</label>
               <input type="text" id="cfg-openrouter-model" value="google/gemini-2.0-flash-lite-001" placeholder="google/gemini-2.0-flash-lite-001" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
             </div>
           </div>
@@ -351,7 +368,7 @@
         <!-- ElevenLabs Settings -->
         <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
           <div class="flex justify-between items-center mb-3">
-            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">2. Audio Narrador (ElevenLabs)</h4>
+            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">3. Audio Narrador (ElevenLabs)</h4>
             <div class="flex items-center gap-2">
               <span id="test-status-elevenlabs" class="text-[10px] font-mono"></span>
               <button type="button" onclick="testApi('elevenlabs')" class="bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded text-[11px] font-mono transition">🎙️ Probar ElevenLabs</button>
@@ -359,7 +376,7 @@
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">ElevenLabs API Key</label>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">ElevenLabs API Key (Secreta sk_...)</label>
               <input type="password" id="cfg-elevenlabs-key" placeholder="sk_... (Clave Secreta)" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
             </div>
             <div>
@@ -369,23 +386,27 @@
           </div>
         </div>
 
-        <!-- NVIDIA Image Settings -->
+        <!-- Image Generation Settings -->
         <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
           <div class="flex justify-between items-center mb-3">
-            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">3. Generación Visual (NVIDIA Cloud API)</h4>
+            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">4. Generación Visual (NVIDIA Image / Flux / Qwen)</h4>
             <div class="flex items-center gap-2">
               <span id="test-status-image" class="text-[10px] font-mono"></span>
-              <button type="button" onclick="testApi('image')" class="bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded text-[11px] font-mono transition">🎨 Probar Flux</button>
+              <button type="button" onclick="testApi('image')" class="bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded text-[11px] font-mono transition">🎨 Probar Generador de Imágenes</button>
             </div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Image API Key</label>
-              <input type="password" id="cfg-nvidia-image-key" placeholder="En blanco para simulación o usar NVIDIA general" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+              <input type="password" id="cfg-nvidia-image-key" placeholder="nvapi-... (En blanco usa la clave principal)" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
             </div>
             <div>
-              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Image Model</label>
-              <input type="text" id="cfg-nvidia-image-model" value="black-forest-labs/flux-1-schnell" placeholder="black-forest-labs/flux-1-schnell" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">URL Invocadora (Servidor)</label>
+              <input type="text" id="cfg-nvidia-image-url" value="https://ai.api.nvidia.com/v1/genai" placeholder="https://ai.api.nvidia.com/v1/genai" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+            </div>
+            <div>
+              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">Modelo / Endpoint Manual</label>
+              <input type="text" id="cfg-nvidia-image-model" value="black-forest-labs/flux-1-schnell" placeholder="black-forest-labs/flux-1-schnell o qwen/qwen-image" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
             </div>
           </div>
         </div>
@@ -464,14 +485,20 @@
         const cfg = await response.json();
         
         // Populate inputs safely
-        setValue('cfg-openrouter-key', cfg.OPENROUTER_API_KEY, cfg.OPENROUTER_API_KEY === 'Configurada' ? 'API Key Configurada (Escribe para cambiar)' : 'En blanco para simulación o usar NVIDIA');
-        setValue('cfg-openrouter-model', cfg.OPENROUTER_MODEL);
-        setValue('cfg-nvidia-key', cfg.NVIDIA_API_KEY, cfg.NVIDIA_API_KEY === 'Configurada' ? 'API Key Configurada (Escribe para cambiar)' : 'En blanco para simulación o usar OpenRouter');
-        setValue('cfg-nvidia-model', cfg.NVIDIA_MODEL);
-        setValue('cfg-elevenlabs-key', cfg.ELEVENLABS_API_KEY, cfg.ELEVENLABS_API_KEY === 'Configurada' ? 'API Key Configurada (Escribe para cambiar)' : 'En blanco para audio simulado');
-        setValue('cfg-elevenlabs-voice', cfg.ELEVENLABS_VOICE_ID);
-        setValue('cfg-nvidia-image-key', cfg.NVIDIA_IMAGE_KEY, cfg.NVIDIA_IMAGE_KEY === 'Configurada' ? 'API Key Configurada (Escribe para cambiar)' : 'En blanco para simulación');
-        setValue('cfg-nvidia-image-model', cfg.NVIDIA_IMAGE_MODEL);
+        setValue('cfg-nvidia-key', cfg.NVIDIA_API_KEY, cfg.NVIDIA_API_KEY === 'Configurada' ? 'API Key Configurada (Escribe para cambiar)' : 'nvapi-...');
+        setValue('cfg-nvidia-url', cfg.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1');
+        setValue('cfg-nvidia-model', cfg.NVIDIA_MODEL || 'meta/llama-3.1-70b-instruct');
+
+        setValue('cfg-openrouter-key', cfg.OPENROUTER_API_KEY, cfg.OPENROUTER_API_KEY === 'Configurada' ? 'API Key Configurada (Escribe para cambiar)' : 'sk-or-v1-...');
+        setValue('cfg-openrouter-url', cfg.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1');
+        setValue('cfg-openrouter-model', cfg.OPENROUTER_MODEL || 'google/gemini-2.0-flash-lite-001');
+
+        setValue('cfg-elevenlabs-key', cfg.ELEVENLABS_API_KEY, cfg.ELEVENLABS_API_KEY === 'Configurada' ? 'API Key Configurada (Escribe para cambiar)' : 'sk_...');
+        setValue('cfg-elevenlabs-voice', cfg.ELEVENLABS_VOICE_ID || 'N2lVS1w4EtoT3dr4eOWO');
+
+        setValue('cfg-nvidia-image-key', cfg.NVIDIA_IMAGE_KEY, cfg.NVIDIA_IMAGE_KEY === 'Configurada' ? 'API Key Configurada (Escribe para cambiar)' : 'nvapi-...');
+        setValue('cfg-nvidia-image-url', cfg.NVIDIA_IMAGE_BASE_URL || 'https://ai.api.nvidia.com/v1/genai');
+        setValue('cfg-nvidia-image-model', cfg.NVIDIA_IMAGE_MODEL || 'black-forest-labs/flux-1-schnell');
 
         document.getElementById('settings-modal').classList.remove('hidden');
       } catch (err) {
@@ -485,13 +512,19 @@
 
     async function saveSettings() {
       const config = {
-        OPENROUTER_API_KEY: getValue('cfg-openrouter-key'),
-        OPENROUTER_MODEL: getValue('cfg-openrouter-model'),
         NVIDIA_API_KEY: getValue('cfg-nvidia-key'),
+        NVIDIA_BASE_URL: getValue('cfg-nvidia-url'),
         NVIDIA_MODEL: getValue('cfg-nvidia-model'),
+
+        OPENROUTER_API_KEY: getValue('cfg-openrouter-key'),
+        OPENROUTER_BASE_URL: getValue('cfg-openrouter-url'),
+        OPENROUTER_MODEL: getValue('cfg-openrouter-model'),
+
         ELEVENLABS_API_KEY: getValue('cfg-elevenlabs-key'),
         ELEVENLABS_VOICE_ID: getValue('cfg-elevenlabs-voice'),
+
         NVIDIA_IMAGE_KEY: getValue('cfg-nvidia-image-key'),
+        NVIDIA_IMAGE_BASE_URL: getValue('cfg-nvidia-image-url'),
         NVIDIA_IMAGE_MODEL: getValue('cfg-nvidia-image-model')
       };
 
@@ -506,7 +539,7 @@
 
         if (!response.ok) throw new Error('Error al guardar en el servidor');
         
-        writeToTerminal('[System] Configuración de APIs guardada y recargada en caliente con éxito.', 'success');
+        writeToTerminal('[System] Configuración de APIs, URLs Invocadoras y Modelos guardada con éxito.', 'success');
         closeSettingsModal();
         
         // Refresh ideas list to see if real agent is now accessible
@@ -524,16 +557,19 @@
       statusEl.textContent = 'Probando conexión...';
 
       let key = '';
+      let url = '';
       let model = '';
       let endpoint = `/api/probar-api/${service}`;
 
       if (service === 'llm') {
         key = getValue('cfg-nvidia-key') || getValue('cfg-openrouter-key');
+        url = getValue('cfg-nvidia-url') || getValue('cfg-openrouter-url');
         model = getValue('cfg-nvidia-model') || getValue('cfg-openrouter-model');
       } else if (service === 'elevenlabs') {
         key = getValue('cfg-elevenlabs-key');
       } else if (service === 'image') {
         key = getValue('cfg-nvidia-image-key') || getValue('cfg-nvidia-key');
+        url = getValue('cfg-nvidia-image-url');
         model = getValue('cfg-nvidia-image-model');
       }
 
@@ -541,7 +577,7 @@
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: key, service: service, model: model })
+          body: JSON.stringify({ key: key, service: service, url: url, model: model })
         });
         const data = await res.json();
         if (data.status === 'success') {
@@ -553,7 +589,7 @@
         }
       } catch (err) {
         statusEl.className = 'text-[10px] font-mono text-red-400 font-bold';
-        statusEl.textContent = '🔴 Error: ' + err.message;
+        statusEl.textContent = '🔴 Error al probar conexión';
       }
     }
 
