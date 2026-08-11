@@ -247,7 +247,12 @@ class NvidiaImageClient:
         aspect_suffix = "9:16 vertical portrait framing" if aspect_ratio == "9:16" else "16:9 widescreen cinematic framing"
         final_prompt = f"{sanitized_prompt}, {aspect_suffix}"
 
-        url = f"{self.base_url}/{self.model}"
+        model_str = (self.model or "").strip()
+        if model_str.startswith("http://") or model_str.startswith("https://"):
+            url = model_str
+        else:
+            url = f"{self.base_url}/{model_str}"
+
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",

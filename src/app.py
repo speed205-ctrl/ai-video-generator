@@ -1339,9 +1339,8 @@ async def probar_api_elevenlabs(req: ApiTestRequest):
         return {"status": "error", "mensaje": f"Error de conexión con ElevenLabs: {str(e)}"}
 
 def sanitize_model_name(model_val: Optional[str], default_val: str) -> str:
-    if not model_val or "http" in str(model_val).lower() or "nvidia.com" in str(model_val).lower():
-        return default_val
-    return str(model_val).strip()
+    val = (model_val or "").strip()
+    return val if val else default_val
 
 @app.get("/api/config")
 async def get_config():
