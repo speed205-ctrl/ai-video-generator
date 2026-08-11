@@ -786,21 +786,27 @@ def build_fact_enriched_mock_script(tema: str, duracion: int, parte: str = "sing
                     "Y mientras miras las fotos en blanco y negro de mil novecientos cincuenta y nueve, el viento helado parece susurrar tu nombre."
                 )
 
-    # General fact-rich narrative fallback if topic is unknown
+    # Dynamic 6-Angle Narrative Matrix for custom/unregistered topics
+    import hashlib
+    topic_hash = int(hashlib.md5(tema.encode("utf-8")).hexdigest(), 16)
+    angle_idx = topic_hash % 6
+
     if parte == "part1":
-        return (
-            f"Examinas las crónicas y registros documentados sobre {tema}.\n"
-            "Los primeros informes oficiales registraron eventos inusuales que desafiaban las explicaciones convencionales.\n"
-            "Testigos presenciales confirmaron la alteración de los hechos minutos antes de que la zona fuera acordonada.\n"
-            "Pero lo que las investigaciones posteriores descubrieron en los archivos cambiaría todo...\n"
-            "Sígueme ahora mismo para ver la Parte 2."
-        )
+        hooks_p1 = [
+            f"A las tres de la madrugada, los primeros reportes sobre {tema} registraron una anomalía inexplicable.\nLas pruebas iniciales desafiaron a los investigadores principales de la época.\nPero lo que descubrieron en la segunda inspección cambiaría el curso del caso...\nSígueme ahora mismo para ver la Parte 2.",
+            f"Abres la escotilla helada mientras examinas los restos abandonados de {tema}.\nSientes una corriente helada mientras descubres las primeras pistas que la prensa omitió.\nAntes de que las luces se apagaran por completo, una silueta se recortó en la entrada...\nSígueme ahora mismo para ver la Parte 2.",
+            f"Un paquete de datos corrompido sobre {tema} fue subido de forma anónima a los servidores.\nAl descompilar el código, los registros de tiempo muestran actividades simultaneous en tres países.\nLa última línea del registro encriptado advertía de un peligro inminente...\nSígueme ahora mismo para ver la Parte 2.",
+            f"Día siete de la expedición oficial en la zona de {tema}.\nLas brújulas comenzaron a girar sin control mientras los sensores detectaban presencias en el perímetro.\nEl diario de ruta se interrumpe justo en el momento del hallazgo principal...\nSígueme ahora mismo para ver la Parte 2.",
+            f"Nadie en la ciudad se atreve a hablar públicamente sobre lo que ocurrió con {tema}.\nLos periódicos de la época fueron censurados horas después de la primera edición.\nUn expediente filtrado revela la cinta grabada por el último testigo...\nSígueme ahora mismo para ver la Parte 2.",
+            f"Observas la fotografía en blanco y negro de {tema} bajo la luz tenue de tu escritorio.\nHay un detalle en el reflejo del cristal que desafía toda lógica fotográfica.\nAl ampliar la imagen, descubres que la sombra está mirando fijamente hacia la cámara...\nSígueme ahora mismo para ver la Parte 2."
+        ]
+        return hooks_p1[angle_idx]
     elif parte == "part2":
         return (
             f"Continuamos explorando los archivos históricos de {tema}.\n"
-            "Las transcripciones de las bitácoras revelaron pausas heladas y notas enigmáticas dejadas por los investigadores principales.\n"
-            "Fotografías desclasificadas muestran que las evidencias físicas fueron alteradas antes de declarar el caso como cerrado.\n"
-            "Lo que reveló el informe final permaneció archivado bajo reserva absoluta durante décadas...\n"
+            "Las transcripciones de las bitácoras revelan notas enigmáticas dejadas por el equipo de investigación.\n"
+            "Fotografías históricas muestran que las evidencias físicas fueron alteradas antes de declarar el caso cerrado.\n"
+            "Lo que reveló el análisis posterior permaneció oculto durante décadas...\n"
             "Sígueme para ver la Parte 3 y la conclusión final."
         )
     elif parte == "part3":
@@ -811,35 +817,51 @@ def build_fact_enriched_mock_script(tema: str, duracion: int, parte: str = "sing
             "Y mientras revisas estas imágenes en tu pantalla, los registros nos recuerdan que la historia sigue abierta."
         )
     else:
-        if duracion == 1:
-            return (
-                f"Examinas las crónicas y registros documentados sobre {tema}.\n"
-                "Los primeros informes oficiales de la época registraron eventos inusuales que desafiaban las explicaciones convencionales.\n"
-                "Testigos presenciales confirmaron la alteración de los hechos minutos antes de que el lugar fuera evacuado.\n"
-                "Los expedientes sobre {tema} permanecen custodiados en el archivo histórico, conservando el misterio para quienes investigan su origen."
+        matrix = [
+            # Angle 0: Forensic / Police Report
+            (
+                f"A las tres de la madrugada, los primeros reportes de campo sobre {tema} registraron una alteración inusual.\n"
+                "Las pruebas de laboratorio revelaron la presencia de elementos compuestos que desafiaron a los investigadores de la época.\n"
+                "Las imágenes archivadas confirman que la zona fue acordonada antes del amanecer por personal no identificado.\n"
+                "Y hasta el día de hoy, el expediente permanece abierto para quien intente descifrar su verdadero origen."
+            ),
+            # Angle 1: First-Person Action / Survival
+            (
+                f"Abres la escotilla de metal helada mientras el viento choca contra tu rostro. Estás investigando el suceso de {tema}.\n"
+                "Sientes un frío intenso en los dedos mientras examinas los restos abandonados en el terreno.\n"
+                "Un zumbido tenue vibra en el suelo antes de que las luces principales colapsen por completo.\n"
+                "Te detienes un segundo en la oscuridad. Sabiendo que la historia apenas comienza a mostrar sus sombras."
+            ),
+            # Angle 2: Tech / Data Leak
+            (
+                f"Un paquete de datos corrompido sobre {tema} fue subido de forma anónima a la red profunda.\n"
+                "Al descomprimir las imágenes, los registros de tiempo muestran actividades simultáneas en tres servidores distintos.\n"
+                "Las firmas digitales no pertenecen a ninguna compañía o usuario registrado en la época.\n"
+                "Y la última línea del archivo garabateada en código hex solo pregunta: ¿Por qué buscas lo que fue borrado?"
+            ),
+            # Angle 3: Expedition Logbook
+            (
+                f"Séptimo día de exploración en la zona designada para {tema}.\n"
+                "Las brújulas de navegación comienzan a girar sin control mientras las lecturas de los sensores caen a cero.\n"
+                "Los miembros del equipo descubren las primeras marcas en la roca que no fueron hechas por herramientas humanas.\n"
+                "El diario de ruta se interrumpe abruptamente en esta página, dejando la respuesta inconclusa."
+            ),
+            # Angle 4: Investigative Journalism
+            (
+                f"Nadie en el departamento se atreve a hablar públicamente sobre lo que ocurrió con {tema}.\n"
+                "Los informes de prensa publicados en la época omitieron intencionalmente los testimonios de los tres testigos principales.\n"
+                "Décadas después, un ex-analista entregó una cinta magnética grabada en secreto durante las reuniones finales.\n"
+                "Y al escuchar el audio filtrado, comprendes por qué prefirieron guardar silencio."
+            ),
+            # Angle 5: Psychological Enigma
+            (
+                f"Observas la fotografía en blanco y negro de {tema} bajo la luz tenue de la habitación.\n"
+                "Hay algo en la sombra del fondo que no encaja con la perspectiva original de la escena.\n"
+                "Revisas el negativo original y notas que la silueta parece haberse desplazado entre cada toma.\n"
+                "Cierras el expediente despacio. Sabiendo que el enigma te ha encontrado a ti."
             )
-        elif duracion == 2:
-            return (
-                f"Examinas los expedientes de investigación clasificados en los archivos históricos sobre {tema}.\n"
-                "Todo comenzó cuando los primeros informes de campo registraron alteraciones anómalas que las autoridades de la época intentaron encubrir.\n"
-                "Las transcripciones de las bitácoras revelan pausas heladas y notas enigmáticas dejadas por los investigadores principales.\n"
-                "Fotografías históricas muestran que las evidencias físicas fueron alteradas antes de declarar el caso como cerrado.\n"
-                "Las interrogantes sobre {tema} siguen vigentes hasta el día de hoy, sugiriendo que la historia no ha sido contada en su totalidad.\n"
-                "Y al revisar los registros oficiales, descubres un detalle en las notas al pie que cambia la perspectiva de todo el suceso."
-            )
-        else:
-            return (
-                f"Examinas los expedientes de investigación desclasificados en los archivos históricos sobre {tema}.\n"
-                "Todo comenzó cuando las primeras observaciones anómalas fueron registradas en las bitácoras de campo del equipo de investigación.\n"
-                "Los informes oficiales presentaron discrepancias severas al compararlos con los testimonios originales de los testigos presenciales.\n"
-                "Investigadores clave declararon haber presenciado eventos que desafiaban las explicaciones científicas de la época antes de que el expediente fuera reservado.\n"
-                "En las transcripciones de las cartas y notas manuscritas se mencionan detalles inquietantes que coinciden con incidentes similares registrados años atrás.\n"
-                "Fotografías desclasificadas muestran la infraestructura abandonada y las marcas en el terreno tras la interrupción abrupta de las operaciones.\n"
-                "Los análisis posteriores confirmaron la presencia de patrones anómalos que no corresponden a ninguna explicación convencional.\n"
-                "A pesar del paso del tiempo, fragmentos del expediente de {tema} han sobrevivido en archivos regionales de difícil acceso.\n"
-                "Observas las fechas y los nombres de las bitácoras y notas que las coincidencias son demasiado precisas para ser casuales.\n"
-                "El archivo concluye con una anotación al margen: El fenómeno permanece sin resolver en la historia oficial."
-            )
+        ]
+        return matrix[angle_idx]
 
 @app.post("/api/generar-guion")
 async def generar_guion(req: ScriptGenerateRequest):

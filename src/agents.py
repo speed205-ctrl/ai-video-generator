@@ -197,7 +197,7 @@ class ResearcherWriterAgent:
         return await self.client.generate_chat(
             system_prompt=self.system_prompt,
             user_prompt=user_prompt,
-            temperature=0.75
+            temperature=0.85
         )
 
 
