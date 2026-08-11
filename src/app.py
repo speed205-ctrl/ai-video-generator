@@ -1303,7 +1303,13 @@ async def probar_api_elevenlabs(req: ApiTestRequest):
         key = key_input
 
     if not key:
-        return {"status": "success", "mensaje": "Modo Voz Simulado / TTS Gratis Activo (Ingresa tu API Key para ElevenLabs HD)"}
+        return {"status": "success", "mensaje": "Modo Voz Simulado / TTS Gratis Activo (Ingresa tu API Key con 'sk_' para ElevenLabs HD)"}
+
+    if not key.startswith("sk_"):
+        return {
+            "status": "error", 
+            "mensaje": "La API Key de ElevenLabs debe comenzar con 'sk_'. En su lugar pegaste el Key ID. Copia la clave secreta 'sk_...' desde ElevenLabs."
+        }
 
     start = time.time()
     try:
@@ -1321,9 +1327,70 @@ async def probar_api_elevenlabs(req: ApiTestRequest):
                     "latencia_ms": latency
                 }
             else:
-                return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: Clave de ElevenLabs no válida. (Se usará TTS Gratis)"}
+                err_detail = r.json().get("detail", {}) if r.status_code != 500 else {}
+                msg = err_detail.get("message", "Clave no válida.") if isinstance(err_detail, dict) else "Clave no válida."
+                return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: {msg}"}
     except Exception as e:
         return {"status": "error", "mensaje": f"Error de conexión con ElevenLabs: {str(e)}"}
+
+@app.get("/api/config")
+async def get_config():
+    return {
+        "OPENROUTER_API_KEY": "Configurada" if os.getenv("OPENROUTER_API_KEY") else "",
+        "OPENROUTER_MODEL": os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-lite-001"),
+        "NVIDIA_API_KEY": "Configurada" if os.getenv("NVIDIA_API_KEY") else "",
+        "NVIDIA_MODEL": os.getenv("NVIDIA_MODEL", "meta/llama-3.1-70b-instruct"),
+        "ELEVENLABS_API_KEY": "Configurada" if os.getenv("ELEVENLABS_API_KEY") else "",
+        "ELEVENLABS_VOICE_ID": os.getenv("ELEVENLABS_VOICE_ID", "N2lVS1w4EtoT3dr4eOWO"),
+        "NVIDIA_IMAGE_KEY": "Configurada" if os.getenv("NVIDIA_IMAGE_KEY") else "",
+        "NVIDIA_IMAGE_MODEL": os.getenv("NVIDIA_IMAGE_MODEL", "black-forest-labs/flux-1-schnell")
+    }
+
+class SaveConfigRequest(BaseModel):
+    OPENROUTER_API_KEY: Optional[str] = None
+    OPENROUTER_MODEL: Optional[str] = None
+    NVIDIA_API_KEY: Optional[str] = None
+    NVIDIA_MODEL: Optional[str] = None
+    ELEVENLABS_API_KEY: Optional[str] = None
+    ELEVENLABS_VOICE_ID: Optional[str] = None
+    NVIDIA_IMAGE_KEY: Optional[str] = None
+    NVIDIA_IMAGE_MODEL: Optional[str] = None
+
+@app.post("/api/config")
+async def save_config(req: SaveConfigRequest):
+    env_path = os.path.join(project_dir, ".env")
+    env_vars = {}
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if "=" in line and not line.strip().startswith("#"):
+                    k, v = line.strip().split("=", 1)
+                    env_vars[k.strip()] = v.strip()
+
+    updates = {
+        "OPENROUTER_MODEL": req.OPENROUTER_MODEL or "google/gemini-2.0-flash-lite-001",
+        "NVIDIA_MODEL": req.NVIDIA_MODEL or "meta/llama-3.1-70b-instruct",
+        "ELEVENLABS_VOICE_ID": req.ELEVENLABS_VOICE_ID or "N2lVS1w4EtoT3dr4eOWO",
+        "NVIDIA_IMAGE_MODEL": req.NVIDIA_IMAGE_MODEL or "black-forest-labs/flux-1-schnell"
+    }
+
+    if req.OPENROUTER_API_KEY and req.OPENROUTER_API_KEY != "Configurada":
+        updates["OPENROUTER_API_KEY"] = req.OPENROUTER_API_KEY
+    if req.NVIDIA_API_KEY and req.NVIDIA_API_KEY != "Configurada":
+        updates["NVIDIA_API_KEY"] = req.NVIDIA_API_KEY
+    if req.ELEVENLABS_API_KEY and req.ELEVENLABS_API_KEY != "Configurada":
+        updates["ELEVENLABS_API_KEY"] = req.ELEVENLABS_API_KEY
+    if req.NVIDIA_IMAGE_KEY and req.NVIDIA_IMAGE_KEY != "Configurada":
+        updates["NVIDIA_IMAGE_KEY"] = req.NVIDIA_IMAGE_KEY
+
+    env_vars.update(updates)
+
+    with open(env_path, "w", encoding="utf-8") as f:
+        for k, v in env_vars.items():
+            f.write(f"{k}={v}\n")
+            os.environ[k] = v
+
+    return {"status": "success", "message": "Configuración guardada correctamente."}
 
 if __name__ == "__main__":
     import uvicorn
