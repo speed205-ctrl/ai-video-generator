@@ -1361,14 +1361,14 @@ async def get_config():
     }
 
 class SaveConfigRequest(BaseModel):
-    OPENROUTER_API_KEY: Optional[str] = None
-    OPENROUTER_MODEL: Optional[str] = None
-    NVIDIA_API_KEY: Optional[str] = None
-    NVIDIA_MODEL: Optional[str] = None
-    ELEVENLABS_API_KEY: Optional[str] = None
-    ELEVENLABS_VOICE_ID: Optional[str] = None
-    NVIDIA_IMAGE_KEY: Optional[str] = None
-    NVIDIA_IMAGE_MODEL: Optional[str] = None
+    OPENROUTER_API_KEY: Optional[str] = ""
+    OPENROUTER_MODEL: Optional[str] = ""
+    NVIDIA_API_KEY: Optional[str] = ""
+    NVIDIA_MODEL: Optional[str] = ""
+    ELEVENLABS_API_KEY: Optional[str] = ""
+    ELEVENLABS_VOICE_ID: Optional[str] = ""
+    NVIDIA_IMAGE_KEY: Optional[str] = ""
+    NVIDIA_IMAGE_MODEL: Optional[str] = ""
 
 @app.post("/api/config")
 async def save_config(req: SaveConfigRequest):
@@ -1388,23 +1388,32 @@ async def save_config(req: SaveConfigRequest):
         "NVIDIA_IMAGE_MODEL": sanitize_model_name(req.NVIDIA_IMAGE_MODEL, "black-forest-labs/flux-1-schnell")
     }
 
-    if req.OPENROUTER_API_KEY and req.OPENROUTER_API_KEY != "Configurada":
-        updates["OPENROUTER_API_KEY"] = req.OPENROUTER_API_KEY
-    if req.NVIDIA_API_KEY and req.NVIDIA_API_KEY != "Configurada":
-        updates["NVIDIA_API_KEY"] = req.NVIDIA_API_KEY
-    if req.ELEVENLABS_API_KEY and req.ELEVENLABS_API_KEY != "Configurada":
-        updates["ELEVENLABS_API_KEY"] = req.ELEVENLABS_API_KEY
-    if req.NVIDIA_IMAGE_KEY and req.NVIDIA_IMAGE_KEY != "Configurada":
-        updates["NVIDIA_IMAGE_KEY"] = req.NVIDIA_IMAGE_KEY
+    # Helper for updating or preserving keys
+    def process_key_update(key_name: str, new_val: Optional[str]):
+        val = (new_val or "").strip()
+        if val and val != "Configurada":
+            updates[key_name] = val
+        elif val == "":
+            updates[key_name] = ""
+
+    process_key_update("OPENROUTER_API_KEY", req.OPENROUTER_API_KEY)
+    process_key_update("NVIDIA_API_KEY", req.NVIDIA_API_KEY)
+    process_key_update("ELEVENLABS_API_KEY", req.ELEVENLABS_API_KEY)
+    process_key_update("NVIDIA_IMAGE_KEY", req.NVIDIA_IMAGE_KEY)
 
     env_vars.update(updates)
 
+    # Write clean .env file to disk
     with open(env_path, "w", encoding="utf-8") as f:
         for k, v in env_vars.items():
             f.write(f"{k}={v}\n")
             os.environ[k] = v
 
-    return {"status": "success", "message": "Configuración guardada correctamente."}
+    # Force immediate reload of environment variables in current Python process
+    load_dotenv(dotenv_path=env_path, override=True)
+    logger.info("Configuración de APIs guardada y recargada en caliente con éxito.")
+
+    return {"status": "success", "message": "Configuración guardada y recargada en caliente correctamente."}
 
 if __name__ == "__main__":
     import uvicorn
