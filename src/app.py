@@ -1260,7 +1260,7 @@ async def probar_api_llm(req: ApiTestRequest):
     start = time.time()
     try:
         if key.startswith("nvapi-"):
-            client = LLMClient(api_key=key, base_url="https://integrate.api.nvidia.com/v1", default_model="meta/llama-3.1-405b-instruct")
+            client = LLMClient(api_key=key, base_url="https://integrate.api.nvidia.com/v1", default_model="meta/llama-3.1-70b-instruct")
         else:
             model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-lite-001")
             client = LLMClient(api_key=key, base_url="https://openrouter.ai/api/v1", default_model=model)

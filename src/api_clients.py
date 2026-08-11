@@ -111,7 +111,7 @@ class LLMClient:
 
         if api_key.startswith("nvapi-"):
             self.base_url = "https://integrate.api.nvidia.com/v1"
-            self.default_model = default_model if ("/" in default_model and not default_model.startswith("meta-llama/")) else "meta/llama-3.1-405b-instruct"
+            self.default_model = default_model if (default_model and not default_model.startswith("meta-llama/")) else "meta/llama-3.1-70b-instruct"
         else:
             self.base_url = base_clean
             self.default_model = default_model
