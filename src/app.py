@@ -670,7 +670,7 @@ def get_configured_llm_client() -> LLMClient:
         raise ValueError("No hay clave de API válida de LLM configurada.")
 
 def get_cache_filepath():
-    data_dir = os.path.join(PROJECT_DIR, "data")
+    data_dir = os.path.join(project_dir, "data")
     os.makedirs(data_dir, exist_ok=True)
     return os.path.join(data_dir, "generated_scripts_cache.json")
 
@@ -693,7 +693,7 @@ def save_to_scripts_cache(tema: str, duracion: int, parte: str, guion: str):
             "duracion": duracion,
             "parte": parte,
             "guion": guion,
-            "timestamp": datetime.datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat()
         }
         with open(get_cache_filepath(), "w", encoding="utf-8") as f:
             json.dump(cache, f, ensure_ascii=False, indent=2)
