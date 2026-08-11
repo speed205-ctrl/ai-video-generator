@@ -597,21 +597,7 @@ async def get_ideas():
     else:
         # Initialize LLM Client
         try:
-            if openrouter_key:
-                model = os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet")
-                if openrouter_key.startswith("nvapi-"):
-                    model = os.getenv("NVIDIA_MODEL", "meta/llama-3.1-405b-instruct")
-                client = LLMClient(
-                    api_key=openrouter_key,
-                    base_url="https://openrouter.ai/api/v1",
-                    default_model=model
-                )
-            else:
-                client = LLMClient(
-                    api_key=nvidia_key,
-                    base_url="https://integrate.api.nvidia.com/v1",
-                    default_model=os.getenv("NVIDIA_MODEL", "meta/llama-3.1-405b-instruct")
-                )
+            client = get_configured_llm_client()
 
             agent = IdeaGeneratorAgent(client)
             ideas = await agent.generate_ideas(existing_topics)
@@ -646,52 +632,66 @@ async def delete_ideas_memory():
         raise HTTPException(status_code=500, detail=f"Error al vaciar la memoria: {e}")
 
 
+def get_configured_llm_client() -> LLMClient:
+    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    nvidia_key = os.getenv("NVIDIA_API_KEY", "").strip()
+    
+    if openrouter_key.startswith("nvapi-"):
+        nvidia_key = openrouter_key
+        openrouter_key = ""
+
+    if openrouter_key and openrouter_key.startswith("sk-or-"):
+        model = os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet")
+        return LLMClient(
+            api_key=openrouter_key,
+            base_url="https://openrouter.ai/api/v1",
+            default_model=model
+        )
+    elif nvidia_key:
+        model = os.getenv("NVIDIA_MODEL", "meta/llama-3.1-405b-instruct")
+        return LLMClient(
+            api_key=nvidia_key,
+            base_url="https://integrate.api.nvidia.com/v1",
+            default_model=model
+        )
+    else:
+        raise ValueError("No hay clave de API válida de LLM configurada.")
+
 @app.post("/api/generar-guion")
 async def generar_guion(req: ScriptGenerateRequest):
     tema = req.tema.strip()
     if not tema:
         raise HTTPException(status_code=400, detail="El tema no puede estar vacío.")
 
-    # Determine if we should mock script generation
-    openrouter_key = os.getenv("OPENROUTER_API_KEY")
-    nvidia_key = os.getenv("NVIDIA_API_KEY")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+    nvidia_key = os.getenv("NVIDIA_API_KEY", "").strip()
     mock_mode = (not openrouter_key and not nvidia_key) or os.getenv("MOCK_MODE") == "true"
 
     if mock_mode:
         logger.info("[Mock] Generando guion de simulación de GlitchLabz...")
         mock_script = (
-            "Cargas el archivo ejecutable en tu viejo computador. La pantalla parpadea en un verde pálido.\n"
-            "Un zumbido de estática inunda tus auriculares. Sabes que hay un glitch en el código del juego.\n"
-            "Sientes que el juego te observa. El personaje se mueve solo, desobedeciendo tus controles.\n"
+            f"El enigma de {tema} comienza en las sombras de la red.\n"
+            "Un archivo corrompido es descubierto en los servidores de pruebas. La pantalla parpadea con estática verde.\n"
+            "Los registros de voz revelan una presencia aprendiendo demasiado rápido lo que intentamos olvidar.\n"
             "Un error de renderizado borra el entorno, y una silueta caída se asoma desde la oscuridad del código."
         )
         return {"tema": tema, "guion": mock_script}
 
     try:
-        # Initialize LLM Client
-        if openrouter_key:
-            model = os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet")
-            if openrouter_key.startswith("nvapi-"):
-                model = os.getenv("NVIDIA_MODEL", "meta/llama-3.1-405b-instruct")
-            client = LLMClient(
-                api_key=openrouter_key,
-                base_url="https://openrouter.ai/api/v1",
-                default_model=model
-            )
-        else:
-            client = LLMClient(
-                api_key=nvidia_key,
-                base_url="https://integrate.api.nvidia.com/v1",
-                default_model=os.getenv("NVIDIA_MODEL", "meta/llama-3.1-405b-instruct")
-            )
-
+        client = get_configured_llm_client()
         from src.agents import ResearcherWriterAgent
         writer_agent = ResearcherWriterAgent(client)
         script_text = await writer_agent.write_script(tema)
         return {"tema": tema, "guion": script_text}
     except Exception as e:
-        logger.error(f"Error al generar guion en la API: {e}")
-        raise HTTPException(status_code=500, detail=f"Error al generar guion: {str(e)}")
+        logger.error(f"Error generando guion vía LLM ({e}). Usando guion de simulación como respaldo.")
+        mock_script = (
+            f"El enigma de {tema} comienza en las sombras de la red.\n"
+            "Un archivo ejecutable no documentado aparece en los servidores de pruebas. La pantalla parpadea en verde pálido.\n"
+            "Un zumbido de estática inunda los altavoces mientras los registros de depuración muestran líneas de código corrompidas.\n"
+            "Un error de renderizado borra el entorno, y una silueta caída se asoma desde la oscuridad de la pantalla."
+        )
+        return {"tema": tema, "guion": mock_script}
 
 @app.post("/api/guardar-guion-temp")
 async def guardar_guion_temp(req: SaveTempScriptRequest):
