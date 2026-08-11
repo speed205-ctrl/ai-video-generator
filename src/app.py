@@ -1291,7 +1291,7 @@ async def probar_api_image(req: ApiTestRequest):
     start = time.time()
     try:
         from src.api_clients import NvidiaImageClient
-        client = NvidiaImageClient(api_key=key, default_model=user_image_model)
+        client = NvidiaImageClient(api_key=key, model=user_image_model)
         latency = int((time.time() - start) * 1000)
         return {"status": "success", "mensaje": f"Clave válida para Flux ({latency}ms) [Modelo: {user_image_model}]", "latencia_ms": latency}
     except Exception as e:

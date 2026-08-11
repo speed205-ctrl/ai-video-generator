@@ -218,9 +218,9 @@ class NvidiaImageClient:
     Client for NVIDIA Cloud API Image Generation supporting BFL FLUX.2 Klein 4B and SD 3.5 Large.
     Supports retries, aspect ratio (16:9 or 9:16), and optional fallback to local SD WebUI.
     """
-    def __init__(self, api_key: str, model: str = "black-forest-labs/flux.2-klein-4b", enable_local_fallback: bool = True):
+    def __init__(self, api_key: str, model: str = "black-forest-labs/flux-1-schnell", default_model: Optional[str] = None, enable_local_fallback: bool = True):
         self.api_key = api_key
-        self.model = model
+        self.model = default_model or model
         self.base_url = "https://ai.api.nvidia.com/v1/genai"
         self.local_fallback = LocalSDWebUIClient() if enable_local_fallback else None
 
