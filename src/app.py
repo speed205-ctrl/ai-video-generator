@@ -1248,9 +1248,14 @@ async def regenerate_single_scene(req: RegenerateSceneRequest):
 @app.post("/api/probar-api/llm")
 async def probar_api_llm(req: ApiTestRequest):
     import time
-    key = (req.key or "").strip() or os.getenv("NVIDIA_API_KEY", "").strip() or os.getenv("OPENROUTER_API_KEY", "").strip()
+    key_input = (req.key or "").strip()
+    if not key_input or key_input == "Configurada":
+        key = os.getenv("NVIDIA_API_KEY", "").strip() or os.getenv("OPENROUTER_API_KEY", "").strip()
+    else:
+        key = key_input
+
     if not key:
-        return {"status": "error", "mensaje": "No se proporcionó ninguna clave API de LLM."}
+        return {"status": "error", "mensaje": "Escribe tu clave API de NVIDIA (nvapi-...) u OpenRouter para probar."}
 
     start = time.time()
     try:
@@ -1263,14 +1268,19 @@ async def probar_api_llm(req: ApiTestRequest):
         latency = int((time.time() - start) * 1000)
         return {"status": "success", "mensaje": f"Conexión exitosa ({latency}ms)", "latencia_ms": latency, "respuesta": res[:50]}
     except Exception as e:
-        return {"status": "error", "mensaje": f"Error de conexión: {str(e)}"}
+        return {"status": "error", "mensaje": f"Error de autenticación/conexión: {str(e)}"}
 
 @app.post("/api/probar-api/image")
 async def probar_api_image(req: ApiTestRequest):
     import time
-    key = (req.key or "").strip() or os.getenv("NVIDIA_API_KEY", "").strip()
+    key_input = (req.key or "").strip()
+    if not key_input or key_input == "Configurada":
+        key = os.getenv("NVIDIA_IMAGE_KEY", "").strip() or os.getenv("NVIDIA_API_KEY", "").strip()
+    else:
+        key = key_input
+
     if not key:
-        return {"status": "error", "mensaje": "No se proporcionó clave API de NVIDIA Flux."}
+        return {"status": "error", "mensaje": "Escribe tu clave API de NVIDIA Flux para probar."}
 
     start = time.time()
     try:
@@ -1285,9 +1295,14 @@ async def probar_api_image(req: ApiTestRequest):
 async def probar_api_elevenlabs(req: ApiTestRequest):
     import time
     import httpx
-    key = (req.key or "").strip() or os.getenv("ELEVENLABS_API_KEY", "").strip()
+    key_input = (req.key or "").strip()
+    if not key_input or key_input == "Configurada":
+        key = os.getenv("ELEVENLABS_API_KEY", "").strip()
+    else:
+        key = key_input
+
     if not key:
-        return {"status": "error", "mensaje": "No se proporcionó clave API de ElevenLabs."}
+        return {"status": "error", "mensaje": "Escribe tu clave API de ElevenLabs para probar."}
 
     start = time.time()
     try:
