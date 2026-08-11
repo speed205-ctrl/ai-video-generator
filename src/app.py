@@ -1338,17 +1338,26 @@ async def probar_api_elevenlabs(req: ApiTestRequest):
     except Exception as e:
         return {"status": "error", "mensaje": f"Error de conexión con ElevenLabs: {str(e)}"}
 
+def sanitize_model_name(model_val: Optional[str], default_val: str) -> str:
+    if not model_val or "http" in str(model_val).lower() or "nvidia.com" in str(model_val).lower():
+        return default_val
+    return str(model_val).strip()
+
 @app.get("/api/config")
 async def get_config():
+    env_path = os.path.join(project_dir, ".env")
+    if os.path.exists(env_path):
+        load_dotenv(dotenv_path=env_path, override=True)
+        
     return {
         "OPENROUTER_API_KEY": "Configurada" if os.getenv("OPENROUTER_API_KEY") else "",
-        "OPENROUTER_MODEL": os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-lite-001"),
+        "OPENROUTER_MODEL": sanitize_model_name(os.getenv("OPENROUTER_MODEL"), "google/gemini-2.0-flash-lite-001"),
         "NVIDIA_API_KEY": "Configurada" if os.getenv("NVIDIA_API_KEY") else "",
-        "NVIDIA_MODEL": os.getenv("NVIDIA_MODEL", "meta/llama-3.1-70b-instruct"),
+        "NVIDIA_MODEL": sanitize_model_name(os.getenv("NVIDIA_MODEL"), "meta/llama-3.1-70b-instruct"),
         "ELEVENLABS_API_KEY": "Configurada" if os.getenv("ELEVENLABS_API_KEY") else "",
-        "ELEVENLABS_VOICE_ID": os.getenv("ELEVENLABS_VOICE_ID", "N2lVS1w4EtoT3dr4eOWO"),
+        "ELEVENLABS_VOICE_ID": sanitize_model_name(os.getenv("ELEVENLABS_VOICE_ID"), "N2lVS1w4EtoT3dr4eOWO"),
         "NVIDIA_IMAGE_KEY": "Configurada" if os.getenv("NVIDIA_IMAGE_KEY") else "",
-        "NVIDIA_IMAGE_MODEL": os.getenv("NVIDIA_IMAGE_MODEL", "black-forest-labs/flux-1-schnell")
+        "NVIDIA_IMAGE_MODEL": sanitize_model_name(os.getenv("NVIDIA_IMAGE_MODEL"), "black-forest-labs/flux-1-schnell")
     }
 
 class SaveConfigRequest(BaseModel):
@@ -1373,10 +1382,10 @@ async def save_config(req: SaveConfigRequest):
                     env_vars[k.strip()] = v.strip()
 
     updates = {
-        "OPENROUTER_MODEL": req.OPENROUTER_MODEL or "google/gemini-2.0-flash-lite-001",
-        "NVIDIA_MODEL": req.NVIDIA_MODEL or "meta/llama-3.1-70b-instruct",
-        "ELEVENLABS_VOICE_ID": req.ELEVENLABS_VOICE_ID or "N2lVS1w4EtoT3dr4eOWO",
-        "NVIDIA_IMAGE_MODEL": req.NVIDIA_IMAGE_MODEL or "black-forest-labs/flux-1-schnell"
+        "OPENROUTER_MODEL": sanitize_model_name(req.OPENROUTER_MODEL, "google/gemini-2.0-flash-lite-001"),
+        "NVIDIA_MODEL": sanitize_model_name(req.NVIDIA_MODEL, "meta/llama-3.1-70b-instruct"),
+        "ELEVENLABS_VOICE_ID": sanitize_model_name(req.ELEVENLABS_VOICE_ID, "N2lVS1w4EtoT3dr4eOWO"),
+        "NVIDIA_IMAGE_MODEL": sanitize_model_name(req.NVIDIA_IMAGE_MODEL, "black-forest-labs/flux-1-schnell")
     }
 
     if req.OPENROUTER_API_KEY and req.OPENROUTER_API_KEY != "Configurada":

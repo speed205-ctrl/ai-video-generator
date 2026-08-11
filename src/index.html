@@ -447,7 +447,13 @@
     function setValue(id, val, placeholderText = '') {
       const el = document.getElementById(id);
       if (el) {
-        el.value = val || '';
+        let cleanVal = val || '';
+        if (id.includes('model') && (cleanVal.includes('http://') || cleanVal.includes('https://') || cleanVal.includes('nvidia.com'))) {
+          if (id === 'cfg-nvidia-model') cleanVal = 'meta/llama-3.1-70b-instruct';
+          else if (id === 'cfg-openrouter-model') cleanVal = 'google/gemini-2.0-flash-lite-001';
+          else if (id === 'cfg-nvidia-image-model') cleanVal = 'black-forest-labs/flux-1-schnell';
+        }
+        el.value = cleanVal;
         if (placeholderText) el.placeholder = placeholderText;
       }
     }
