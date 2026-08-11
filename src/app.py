@@ -1261,16 +1261,20 @@ async def probar_api_llm(req: ApiTestRequest):
     start = time.time()
     try:
         user_model = (req.model or "").strip()
-        if key.startswith("nvapi-"):
+        if user_model.startswith("http://") or user_model.startswith("https://"):
+            base_url = user_model
+            target_model = "meta/llama-3.1-70b-instruct"
+        elif key.startswith("nvapi-"):
+            base_url = "https://integrate.api.nvidia.com/v1"
             target_model = user_model or os.getenv("NVIDIA_MODEL", "").strip() or "meta/llama-3.1-70b-instruct"
-            client = LLMClient(api_key=key, base_url="https://integrate.api.nvidia.com/v1", default_model=target_model)
         else:
+            base_url = "https://openrouter.ai/api/v1"
             target_model = user_model or os.getenv("OPENROUTER_MODEL", "").strip() or "google/gemini-2.0-flash-lite-001"
-            client = LLMClient(api_key=key, base_url="https://openrouter.ai/api/v1", default_model=target_model)
-        
+
+        client = LLMClient(api_key=key, base_url=base_url, default_model=target_model)
         res = await client.generate_chat("Responde solo OK", "Ping")
         latency = int((time.time() - start) * 1000)
-        return {"status": "success", "mensaje": f"Conexión exitosa ({latency}ms) [Modelo: {target_model}]", "latencia_ms": latency, "respuesta": res[:50]}
+        return {"status": "success", "mensaje": f"Conexión exitosa ({latency}ms) [{target_model}]", "latencia_ms": latency, "respuesta": res[:50]}
     except Exception as e:
         return {"status": "error", "mensaje": f"Error de conexión: {str(e)}"}
 
@@ -1293,7 +1297,7 @@ async def probar_api_image(req: ApiTestRequest):
         from src.api_clients import NvidiaImageClient
         client = NvidiaImageClient(api_key=key, model=user_image_model)
         latency = int((time.time() - start) * 1000)
-        return {"status": "success", "mensaje": f"Clave válida para Flux ({latency}ms) [Modelo: {user_image_model}]", "latencia_ms": latency}
+        return {"status": "success", "mensaje": f"Clave válida para Flux ({latency}ms) [{user_image_model}]", "latencia_ms": latency}
     except Exception as e:
         return {"status": "error", "mensaje": f"Error en la clave Flux: {str(e)}"}
 
@@ -1329,6 +1333,16 @@ async def probar_api_elevenlabs(req: ApiTestRequest):
                 return {
                     "status": "success",
                     "mensaje": f"Conexión exitosa. Caracteres: {chars}/{limit} ({latency}ms)",
+                    "latencia_ms": latency
+                }
+            
+            # Fallback for restricted API keys without user_read permission: check /v1/voices
+            r_voices = await http.get("https://api.elevenlabs.io/v1/voices", headers={"xi-api-key": key}, timeout=10.0)
+            if r_voices.status_code == 200:
+                latency = int((time.time() - start) * 1000)
+                return {
+                    "status": "success",
+                    "mensaje": f"Conexión exitosa. Clave de ElevenLabs lista para voz ({latency}ms)",
                     "latencia_ms": latency
                 }
             else:
