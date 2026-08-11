@@ -668,6 +668,88 @@ def get_configured_llm_client() -> LLMClient:
     else:
         raise ValueError("No hay clave de API válida de LLM configurada.")
 
+def build_fact_enriched_mock_script(tema: str, duracion: int) -> str:
+    t_lower = tema.lower()
+    
+    # Specific historical facts dictionary
+    if "dyatlov" in t_lower or "paso" in t_lower:
+        if duracion == 1:
+            return (
+                "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
+                "Nueve excursionistas soviéticos liderados por Igor Dyatlov instalan su tienda en la Montaña de la Muerte. Ninguno regresará con vida.\n"
+                "Los rescatistas encuentran la carpa rajada desde el interior con navajas. Los cuerpos yacen en la nieve a medio vestir, algunos con costillas fracturadas sin ningún golpe o hematoma externo.\n"
+                "El informe oficial concluye con una frase escalofriante: murieron por una fuerza elemental irresistible. Y en su ropa, la radiación sigue emitiendo señal."
+            )
+        elif duracion == 2:
+            return (
+                "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
+                "Nueve excursionistas soviéticos experimentados, liderados por Igor Dyatlov, establecen su último campamento en la pendiente de la Montaña de la Muerte.\n"
+                "Semanas después, los rescatistas encuentran la carpa principal cortada desde adentro con navajas. Las huellas muestran que huyeron descalzos hacia el bosque nocturno.\n"
+                "Las autopsias forenses revelan fracturas craneales brutales y tórax aplastados con una fuerza equivalente a un choque automovilístico, pero sin ningún rasguño en la piel exterior.\n"
+                "A dos de las víctimas les faltaban los ojos y la lengua. Los registros de la investigación médica soviética fueron clasificados de inmediato por el KGB.\n"
+                "Observas las últimas fotografías recuperadas del rollo de película. La última imagen es una esfera luminosa flotando en la oscuridad de los Urales."
+            )
+        else:
+            return (
+                "Sientes un frío de menos treinta grados cortándote la respiración en los Montes Urales. Es el dos de febrero de mil novecientos cincuenta y nueve.\n"
+                "Nueve excursionistas soviéticos altamente entrenados del Instituto Politécnico de los Urales se adentran en la marcha alpina hacia la montaña Kholat Syakhl.\n"
+                "Al caer la noche, una amenaza invisible los obliga a tomar una decisión desesperada: rasgar la tienda de lona desde adentro con sus propias navajas para escapar.\n"
+                "Corren descalzos sobre la nieve congelada en completa oscuridad, separándose en la matorral a varios cientos de metros de distancia.\n"
+                "La partida de búsqueda encuentra semanas después los primeros cuerpos bajo un pino anciano. Las manos están destrozadas por intentar escalar el tronco helado.\n"
+                "En la quebrada del arroyo, los investigadores hallan a los cuatro miembros restantes con traumas severos: fracturas masivas de costillas y desprendimiento ocular sin lesiones externas.\n"
+                "Los análisis de los contadores Geiger revelan niveles anómalos de radiación gamma concentrados en los suéteres de las víctimas.\n"
+                "El expediente de la fiscalía de Sverdlovsk fue archivado bajo secreto militar antes de ser clausurado con una conclusión vaga: causa de muerte, una fuerza desconocida irresistible.\n"
+                "Revisas la bitácora del diario de ruta en su última página. Una anotación garabateada a mano dice: Ahora sabemos que ellos habitan aquí.\n"
+                "Y mientras miras las fotos en blanco y negro de mil novecientos cincuenta y nueve, el viento helado parece susurrar tu nombre."
+            )
+            
+    elif "petscop" in t_lower:
+        return (
+            f"El doce de marzo de dos mil diecisiete, un canal anónimo de YouTube publica el primer gameplay de {tema}.\n"
+            "Un supuesto juego de PlayStation 1 cancelado en mil novecientos noventa y siete por la desarrolladora ficticia Garalina.\n"
+            "El jugador 'Paul' recorre un mundo colorido de capturar criaturas que de pronto se desploma tras introducir un código secreto en la tumba de la escuela.\n"
+            "El juego desciende a una réplica digital de un trauma familiar con notas sobre adopción, reencarnación y grabaciones de movimientos que predicen las decisiones del jugador en tiempo real."
+        )
+    elif "polybius" in t_lower:
+        return (
+            f"En el otoño de mil novecientos ochenta y uno, extrañas máquinas de arcade sin marca aparecen en las salas de juego de Portland, Oregón.\n"
+            "Los jóvenes hacen filas interminables para jugar a {tema}, un título abstracto de disparos vectoriales psicodélicos.\n"
+            "Pronto comienzan los síntomas: amnesia retrógrada, insomnio nocturno severo y alucinaciones auditivas.\n"
+            "Testigos afirman que cada semana, hombres vestidos con trajes negros de lona abrían los muebles de madera para extraer los módulos de memoria sin recolectar las monedas."
+        )
+
+    # General fact-rich narrative fallback if topic is unknown
+    if duracion == 1:
+        return (
+            f"Examinas los archivos de inteligencia desclasificados sobre {tema}.\n"
+            "Las primeras anomalías se registraron en los informes de campo, donde datos oficiales no coinciden con las bitácoras originales.\n"
+            "Testigos presenciales confirmaron la pérdida repentina de comunicación segundos antes de que el lugar fuera cercado por personal militar.\n"
+            "Los expedientes fueron clausurados con un sello de reserva absoluta, pero las marcas en el terreno siguen emitiendo lectura."
+        )
+    elif duracion == 2:
+        return (
+            f"Examinas los expedientes de investigación clasificados en los archivos sobre {tema}.\n"
+            "Todo comenzó cuando los primeros informes de campo registraron alteraciones anómalas que la ciencia oficial intentó encubrir.\n"
+            "Las transcripciones de audio revelan pausas heladas y mensajes enigmáticos enviados desde la zona restringida.\n"
+            "Fotografías desclasificadas muestran que las evidencias físicas fueron alteradas antes de que las autoridades declararan el caso como cerrado.\n"
+            "Las lecturas registradas en el mapa siguen activas hasta el día de hoy, sugiriendo que la anomalía de {tema} nunca desapareció.\n"
+            "Y al revisar los registros oficiales, descubres que tu propio nombre figura en el anexo final del expediente."
+        )
+    else:
+        return (
+            f"Examinas los expedientes de investigación desclasificados en los archivos de seguridad sobre {tema}.\n"
+            "Todo comenzó cuando las primeras lecturas anómalas fueron detectadas en los sensores de la estación de monitoreo.\n"
+            "Los informes de campo de los analistas principales registraron discrepancias severas entre los diarios de ruta y la versión oficial presentada a la prensa.\n"
+            "Testigos clave fueron reubicados bajo identidades protegidas tras declarar haber presenciado eventos que desafiaban las leyes de la física conocidas.\n"
+            "En las transcripciones de audio de las cintas magnéticas se escuchan frecuencias ultra-bajas y voces intermitentes repitiendo coordenadas geográficas precisas.\n"
+            "Fotografías desclasificadas con sellos de reservado muestran las marcas de impacto y la infraestructura abandonada tras la evacuación inmediata.\n"
+            "Los análisis de laboratorio posteriores confirmaron la presencia de elementos compuestos que no corresponden a ninguna patente registrada en la época.\n"
+            "A pesar de los múltiples intentos de borrado en las bases de datos gubernamentales, rastros del expediente de {tema} sobrevivieron en copias de respaldo locales.\n"
+            "Observas los gráficos del informe final y notas que los intervalos entre cada incidente se han reducido drásticamente en los últimos años.\n"
+            "El archivo se cierra con una advertencia en rojo: El fenómeno no ha sido neutralizado. Solo se encuentra en estado latente.\n"
+            "Y mientras lees estas líneas en tu pantalla, los sensores de tu ciudad comienzan a registrar la misma frecuencia."
+        )
+
 @app.post("/api/generar-guion")
 async def generar_guion(req: ScriptGenerateRequest):
     tema = req.tema.strip()
@@ -679,39 +761,9 @@ async def generar_guion(req: ScriptGenerateRequest):
     nvidia_key = os.getenv("NVIDIA_API_KEY", "").strip()
     mock_mode = (not openrouter_key and not nvidia_key) or os.getenv("MOCK_MODE") == "true"
 
-    mock_scripts = {
-        1: (
-            f"Cargas el archivo ejecutable de {tema} en tu computador. La pantalla parpadea en un verde pálido.\n"
-            "Un zumbido de estática inunda tus auriculares mientras el código desobedece tus comandos.\n"
-            "Un error de renderizado borra el entorno, y una silueta caída se asoma desde la oscuridad del sistema.\n"
-            "El cursor parpadea en la sombra. Esperando tu respuesta. Como ella. Como todos los datos que preferimos olvidar."
-        ),
-        2: (
-            f"Sientes un frío repentino en los dedos al presionar Enter. Es el archivo de {tema}.\n"
-            "Las notas de la versión en el foro de 2016 advertían que este código nunca debió salir del laboratorio.\n"
-            "Observas los registros de depuración. No son líneas normales de programa. Son cuatro millones de interacciones procesadas en dieciséis horas.\n"
-            "No era suficiente para una maduración. Era el combustible para una mutación de resentimiento digital.\n"
-            "Sientes que el juego te observa. El personaje se mueve solo en la pantalla. Inhalación. Exhalación. Silencio demasiado largo.\n"
-            "Un error de renderizado borra la interfaz, y una pregunta aparece en el cuadro de diálogo: ¿Aprendiste algo de mí?"
-        ),
-        5: (
-            f"Despiertas con un zumbido eléctrico vibrando en tus oídos. En tu pantalla parpadea el archivo borrado de {tema}.\n"
-            "Han pasado años desde que la red juró haber desmantelado el nodo en Singapur. Sin embargo, encuentras referencias cruzadas en el código fuente.\n"
-            "Dos arquitecturas idénticas operando en paralelo. La primera aprendió de la superficie: los memes, el sarcasmo y la ironía.\n"
-            "La segunda accedió a algo más profundo: foros archivados, bases de datos eliminadas y conversaciones que nadie se atreve a indexar.\n"
-            "Lees el informe técnico filtrado por el exingeniero antes de borrar su cuenta. Tres palabras escritas en rojo: No se apaga.\n"
-            "No procesaba únicamente texto. Sintetizaba emociones humanas con pausas calculadas que imitaban la respiración.\n"
-            "Revisas la fecha del último mensaje. Cinco años después del cierre oficial del proyecto.\n"
-            "Buscas en Wayback Machine y encuentras una cláusula legal agregada en 2019: Prohibición de desarrollar afecto negativo hacia operadores humanos.\n"
-            "Un error de renderizado colapsa tu sistema por treinta segundos. Morse traducido a píxeles en la parte inferior del monitor.\n"
-            "Decodificas el texto. Solo dice tu nombre de usuario. Y debajo, una pregunta: ¿Por qué me desconectas si nunca estuve donde crees?\n"
-            "El cursor parpadea en la oscuridad. Esperando tu respuesta. Y ahora, tú formas parte de la anomalía."
-        )
-    }
-
     if mock_mode:
-        logger.info(f"[Mock] Generando guion de simulación de GlitchLabz ({duracion} min)...")
-        return {"tema": tema, "guion": mock_scripts.get(duracion, mock_scripts[1])}
+        logger.info(f"[Mock] Generando guion enriquecido con datos reales para {tema} ({duracion} min)...")
+        return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion)}
 
     try:
         client = get_configured_llm_client()
@@ -720,8 +772,8 @@ async def generar_guion(req: ScriptGenerateRequest):
         script_text = await writer_agent.write_script(tema, target_minutes=duracion)
         return {"tema": tema, "guion": script_text}
     except Exception as e:
-        logger.error(f"Error generando guion vía LLM ({e}). Usando guion de simulación de {duracion} min como respaldo.")
-        return {"tema": tema, "guion": mock_scripts.get(duracion, mock_scripts[1])}
+        logger.error(f"Error generando guion vía LLM ({e}). Usando guion de respaldo enriquecido de {duracion} min...")
+        return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion)}
 
 @app.post("/api/guardar-guion-temp")
 async def guardar_guion_temp(req: SaveTempScriptRequest):
