@@ -1262,13 +1262,14 @@ async def probar_api_llm(req: ApiTestRequest):
         if key.startswith("nvapi-"):
             client = LLMClient(api_key=key, base_url="https://integrate.api.nvidia.com/v1", default_model="meta/llama-3.1-405b-instruct")
         else:
-            client = LLMClient(api_key=key, base_url="https://openrouter.ai/api/v1", default_model="meta-llama/llama-3.1-405b-instruct")
+            model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-lite-001")
+            client = LLMClient(api_key=key, base_url="https://openrouter.ai/api/v1", default_model=model)
         
         res = await client.generate_chat("Responde solo OK", "Ping")
         latency = int((time.time() - start) * 1000)
         return {"status": "success", "mensaje": f"Conexión exitosa ({latency}ms)", "latencia_ms": latency, "respuesta": res[:50]}
     except Exception as e:
-        return {"status": "error", "mensaje": f"Error de autenticación/conexión: {str(e)}"}
+        return {"status": "error", "mensaje": f"Error de conexión: {str(e)}"}
 
 @app.post("/api/probar-api/image")
 async def probar_api_image(req: ApiTestRequest):

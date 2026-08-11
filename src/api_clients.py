@@ -103,12 +103,18 @@ class LLMClient:
     """
     def __init__(self, api_key: str, base_url: str, default_model: str, enable_local_fallback: bool = True):
         self.api_key = api_key
-        if api_key.startswith("nvapi-") and "openrouter.ai" in base_url:
-            logger.warning("Auto-correcting base_url from OpenRouter to NVIDIA Cloud API because API Key starts with 'nvapi-'.")
+        base_clean = base_url.rstrip("/")
+        if base_clean.endswith("/chat/completions"):
+            base_clean = base_clean[:-17]
+        elif base_clean.endswith("/chat"):
+            base_clean = base_clean[:-5]
+
+        if api_key.startswith("nvapi-"):
             self.base_url = "https://integrate.api.nvidia.com/v1"
+            self.default_model = default_model if ("/" in default_model and not default_model.startswith("meta-llama/")) else "meta/llama-3.1-405b-instruct"
         else:
-            self.base_url = base_url.rstrip("/")
-        self.default_model = default_model
+            self.base_url = base_clean
+            self.default_model = default_model
         self.local_fallback = LocalOllamaClient() if enable_local_fallback else None
 
     async def _raw_generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: Optional[int] = None) -> str:
