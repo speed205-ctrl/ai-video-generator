@@ -669,10 +669,81 @@ def get_configured_llm_client() -> LLMClient:
     else:
         raise ValueError("No hay clave de API válida de LLM configurada.")
 
+def get_cache_filepath():
+    data_dir = os.path.join(PROJECT_DIR, "data")
+    os.makedirs(data_dir, exist_ok=True)
+    return os.path.join(data_dir, "generated_scripts_cache.json")
+
+def load_scripts_cache():
+    path = get_cache_filepath()
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def save_to_scripts_cache(tema: str, duracion: int, parte: str, guion: str):
+    try:
+        cache = load_scripts_cache()
+        key = f"{tema.strip().lower()}_{duracion}_{parte}"
+        cache[key] = {
+            "tema": tema,
+            "duracion": duracion,
+            "parte": parte,
+            "guion": guion,
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        with open(get_cache_filepath(), "w", encoding="utf-8") as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2)
+        logger.info(f"Guion guardado automáticamente en caché persistente para: '{tema}'")
+    except Exception as e:
+        logger.error(f"No se pudo guardar en el caché persistente: {e}")
+
 def build_fact_enriched_mock_script(tema: str, duracion: int, parte: str = "single") -> str:
     t_lower = tema.lower()
+    cache = load_scripts_cache()
+    cache_key = f"{t_lower}_{duracion}_{parte}"
+    if cache_key in cache:
+        return cache[cache_key]["guion"]
     
-    if "franklin" in t_lower:
+    if "vuelo" in t_lower or "bermuda" in t_lower or "triangulo" in t_lower or "triángulo" in t_lower:
+        if parte == "part1":
+            return (
+                "Son las catorce horas del cinco de diciembre de mil novecientos cuarenta y cinco en la Base Naval de Fort Lauderdale en Florida.\n"
+                "Cinco bombarderos TBM Avenger de la Marina despegan liderados por el teniente Charles Taylor en la misión de entrenamiento Vuelo 19.\n"
+                "Apenas dos horas después de internarse sobre el Océano Atlántico, la torre escucha la voz desorientada de Taylor: Ambos compases de navegación están destruidos. No sabemos dónde está el norte. El mar no se ve como debería.\n"
+                "Pero lo que ocurrió cuando la tormenta tropical los atrapó abriría el mito más oscuro del Triángulo de las Bermudas...\n"
+                "Sígueme ahora mismo para ver la Parte 2."
+            )
+        elif parte == "part2":
+            return (
+                "Continuamos en las aguas del Atlántico en mil novecientos cuarenta y cinco. Los cinco aviones del Vuelo 19 siguen perdidos en la oscuridad sin combustible.\n"
+                "Las torres de control intentan triangular su posición mientras la estática inunda los receptores. El último mensaje distorsionado de Taylor resuena: Estamos entrando en aguas blancas... nada tiene sentido... no intenten buscarnos.\n"
+                "Desesperada, la Marina despacha un hidroavión de rescate PBM Mariner con trece experimentados aviadores a bordo para rastrear la zona.\n"
+                "Veinte minutos después, el hidroavión de rescate desaparece del radar sin emitir una sola señal de auxilio...\n"
+                "Sígueme para ver la Parte 3 y el desenlace final."
+            )
+        elif parte == "part3":
+            return (
+                "Llegamos al desenlace del misterio del Vuelo 19. Veintisiete aviadores y seis aeronaves militares se evaporaron en las aguas del Triángulo de las Bermudas en un solo día.\n"
+                "La Armada de los Estados Unidos desplegó la mayor búsqueda naval de la historia con cientos de barcos y aviones durante semanas sin hallar un solo resto, mancha de aceite o chaleco salvavidas.\n"
+                "El informe oficial de la junta de investigación concluyó con una frase histórica: Fue como si hubieran volado a la Luna.\n"
+                "Y mientras miras las coordenadas del Atlántico en el mapa, las aguas blancas del Triángulo guardan el secreto de los catorce marineros que jamás regresarían a casa."
+            )
+        else:
+            return (
+                "Son las catorce horas del cinco de diciembre de mil novecientos cuarenta y cinco en la Base Naval de Fort Lauderdale, Florida.\n"
+                "Cinco bombarderos TBM Avenger despegan al mando del teniente Charles Taylor en una misión de entrenamiento rutinaria sobre el Atlántico conocida como el Vuelo 19.\n"
+                "Dos horas después, la torre de control recibe la transmisión distorsionada de Taylor: Ambos compases de navegación han colapsado. No sabemos dónde está el norte. El océano no se ve como debería.\n"
+                "Las estaciones en tierra escuchan con impotencia cómo los catorce aviadores vuelan en círculos mientras el combustible se agota y las aguas se tornan de un blanco brillante inquietante.\n"
+                "En un intento desesperado de rescate, un hidroavión PBM Mariner con trece tripulantes despegó al anochecer para localizarlos, desapareciendo del radar veinte minutos después sin dejar rastro.\n"
+                "La junta de investigación naval declaró oficialmente que las veintisiete vidas se evaporaron como si hubieran volado a otro planeta.\n"
+                "Y al observar las cartas náuticas del Triángulo de las Bermudas, el enigma de los cinco bombarderos congelados en el tiempo sigue sin respuesta."
+            )
+
+    elif "franklin" in t_lower:
         if parte == "part1":
             return (
                 "Sientes el crujido del hielo helado aprisionando el casco de madera en el Ártico canadiense. Es mayo de mil ochocientos cuarenta y cinco.\n"
@@ -935,6 +1006,7 @@ async def generar_guion(req: ScriptGenerateRequest):
         from src.agents import ResearcherWriterAgent
         writer_agent = ResearcherWriterAgent(client)
         script_text = await writer_agent.write_script(tema, target_minutes=duracion, parte_serie=parte)
+        save_to_scripts_cache(tema, duracion, parte, script_text)
         return {"tema": tema, "guion": script_text}
     except Exception as e:
         logger.error(f"Error generando guion vía LLM ({e}). Usando guion de respaldo enriquecido ({parte})...")

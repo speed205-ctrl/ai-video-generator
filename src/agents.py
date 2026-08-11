@@ -186,14 +186,13 @@ class ResearcherWriterAgent:
         series_guide = part_instructions.get(parte_serie, "ESTRUCTURA: Historia completa autocontenida.")
 
         user_prompt = (
-            f"Tema del documental/enigma de GlitchLabz: '{topic}'.\n"
+            f"PROCESO AUTÓNOMO DE INVESTIGACIÓN Y REDACCIÓN PARA EL TEMA: '{topic}'.\n"
             f"DURACIÓN REQUERIDA: {target_minutes} minuto(s) ({word_guide}).\n"
             f"{series_guide}\n\n"
-            "INSTRUCCIONES DE EXTENSIÓN Y PROFUNDIDAD NARRATIVA:\n"
-            f"1. Debes generar un guion con la extensión real correspondiente a {target_minutes} minuto(s). No resumas ni recortes la historia de forma abstracta.\n"
-            "2. Incluye hechos verídicos concretos (nombres históricos, fechas, lugares, marcas de tiempo, datos forenses/técnicos).\n"
-            "3. Mantén la narración exclusivamente en segunda persona ('tú').\n\n"
-            "Escribe el guion completo ahora:"
+            "INSTRUCCIONES DE INVESTIGACIÓN Y REDACCIÓN EN 2 PASOS:\n"
+            "PASO 1 (INVESTIGACIÓN EN BASE DE DATOS/RED): Extrae 5 HECHOS HISTÓRICOS O TÉCNICOS VERÍDICOS Y CONCRETOS sobre este tema específico (ejemplo: fechas exactas, nombres de personas o mandos, lugares geográficos reales, modelos de aeronaves/barcos, coordenadas o transcripciones de radio).\n"
+            "PASO 2 (REDACCIÓN NARRATIVA): Redacta un guion fascinante en segunda persona ('tú') de aproximadamente 160 palabras (para 1 min / ~1:20m de narración) u 800 palabras (para 5 min), asegurando que la historia TENGA SENTIDO COMPLETO (Inicio -> Desarrollo -> Clímax -> Conclusión).\n\n"
+            "Escribe la narración final del guion directamente ahora:"
         )
         return await self.client.generate_chat(
             system_prompt=self.system_prompt,
