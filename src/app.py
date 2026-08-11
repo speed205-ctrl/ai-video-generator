@@ -1303,7 +1303,7 @@ async def probar_api_elevenlabs(req: ApiTestRequest):
         key = key_input
 
     if not key:
-        return {"status": "error", "mensaje": "Escribe tu clave API de ElevenLabs para probar."}
+        return {"status": "success", "mensaje": "Modo Voz Simulado / TTS Gratis Activo (Ingresa tu API Key para ElevenLabs HD)"}
 
     start = time.time()
     try:
@@ -1317,11 +1317,11 @@ async def probar_api_elevenlabs(req: ApiTestRequest):
                 latency = int((time.time() - start) * 1000)
                 return {
                     "status": "success",
-                    "mensaje": f"Conexión exitosa. Caracteres usados: {chars}/{limit} ({latency}ms)",
+                    "mensaje": f"Conexión exitosa. Caracteres: {chars}/{limit} ({latency}ms)",
                     "latencia_ms": latency
                 }
             else:
-                return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: Clave de ElevenLabs rechazada."}
+                return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: Clave de ElevenLabs no válida. (Se usará TTS Gratis)"}
     except Exception as e:
         return {"status": "error", "mensaje": f"Error de conexión con ElevenLabs: {str(e)}"}
 
