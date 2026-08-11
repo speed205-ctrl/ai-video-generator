@@ -88,7 +88,10 @@ async def process_scene(
         logger.info(f"[Escena {scene_num}] Procesando recursos concurrentemente...")
         
         # 1. Download TTS audio
-        if mock_mode or not tts_client:
+        audio_exists_valid = os.path.exists(audio_path) and os.path.getsize(audio_path) > 3000
+        if audio_exists_valid:
+            logger.info(f"[Escena {scene_num}] Reutilizando audio existente ({os.path.getsize(audio_path)} bytes).")
+        elif mock_mode or not tts_client:
             logger.info(f"[Mock] Creando audio silente mock para escena {scene_num}")
             os.makedirs(os.path.dirname(audio_path), exist_ok=True)
             import wave
@@ -100,7 +103,6 @@ async def process_scene(
                 wav_file.writeframes(b'\x00\x00' * int(44100 * duration_est))
         else:
             try:
-                # Sanitizar texto en español antes de mandarlo a TTS para evitar censura del audio de YouTube
                 spanish_replacements = {
                     r"\bsangre\b": "carmesí",
                     r"\bcadáver(es)?\b": "cuerpo\\1 inerte\\1",
@@ -130,7 +132,10 @@ async def process_scene(
                     wav_file.writeframes(b'\x00\x00' * int(44100 * duration_est))
 
         # 2. Download Image
-        if mock_mode or not image_client:
+        image_exists_valid = os.path.exists(image_path) and os.path.getsize(image_path) > 10000
+        if image_exists_valid:
+            logger.info(f"[Escena {scene_num}] Reutilizando imagen existente ({os.path.getsize(image_path)} bytes).")
+        elif mock_mode or not image_client:
             logger.info(f"[Mock] Creando imagen mock para escena {scene_num}")
             os.makedirs(os.path.dirname(image_path), exist_ok=True)
             from PIL import Image
@@ -498,6 +503,39 @@ def compile_video(output_dir: str, escaleta: dict) -> Optional[str]:
         except Exception as e:
             logger.error(f"Error al guardar la guía de edición: {e}")
             
+        # Save SRT Subtitles
+        srt_path = os.path.join(output_dir, "subtitulos.srt")
+        try:
+            srt_lines = []
+            def parse_ts_to_srt(ts_str: str) -> str:
+                try:
+                    parts = ts_str.split(":")
+                    mins = int(parts[0])
+                    secs_ms = parts[1].split(".")
+                    secs = int(secs_ms[0])
+                    ms = int(secs_ms[1]) * 10
+                    hrs = mins // 60
+                    mins = mins % 60
+                    return f"{hrs:02d}:{mins:02d}:{secs:02d},{ms:03d}"
+                except Exception:
+                    return "00:00:00,000"
+
+            escenas = escaleta.get("escenas", [])
+            for idx, scene in enumerate(escenas, start=1):
+                text = scene.get("texto", "").strip()
+                start_ts = parse_ts_to_srt(scene.get("timestamp_inicio", "00:00.00"))
+                end_ts = parse_ts_to_srt(scene.get("timestamp_fin", "00:05.00"))
+                srt_lines.append(str(idx))
+                srt_lines.append(f"{start_ts} --> {end_ts}")
+                srt_lines.append(text)
+                srt_lines.append("")
+
+            with open(srt_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(srt_lines))
+            logger.info(f"Archivo de subtítulos SRT guardado en: {srt_path}")
+        except Exception as e:
+            logger.error(f"Error al guardar archivo SRT: {e}")
+
         return video_path
     except Exception as e:
         logger.error(f"Error al concatenar o escribir el video final: {e}")

@@ -129,6 +129,13 @@ class ConfigModel(BaseModel):
     NVIDIA_IMAGE_KEY: str
     NVIDIA_IMAGE_MODEL: str
 
+class RegenerateSceneRequest(BaseModel):
+    project_folder: str
+    numero_escena: int
+    new_prompt: Optional[str] = None
+    new_text: Optional[str] = None
+    mode: str = "image"  # "image", "audio", "both"
+
 def save_env_config(config: dict):
     env_path = os.path.join(project_dir, ".env")
     
@@ -837,6 +844,77 @@ async def websocket_ejecutar(websocket: WebSocket):
             await websocket.close()
         except Exception:
             pass
+
+@app.post("/api/scene/regenerate")
+async def regenerate_single_scene(req: RegenerateSceneRequest):
+    """Regenerates image, audio, or both for a single scene in a project."""
+    output_base = os.path.join(project_dir, "output")
+    target_dir = os.path.join(output_base, req.project_folder) if not os.path.isabs(req.project_folder) else req.project_folder
+    escaleta_path = os.path.join(target_dir, "escaleta.json")
+    
+    if not os.path.exists(escaleta_path):
+        raise HTTPException(status_code=404, detail=f"No se encontró escaleta.json en {req.project_folder}")
+        
+    with open(escaleta_path, "r", encoding="utf-8") as f:
+        escaleta = json.load(f)
+        
+    escenas = escaleta.get("escenas", [])
+    target_scene = None
+    for scene in escenas:
+        if scene.get("numero_escena") == req.numero_escena:
+            target_scene = scene
+            break
+            
+    if not target_scene:
+        raise HTTPException(status_code=404, detail=f"Escena {req.numero_escena} no encontrada en la escaleta.")
+        
+    if req.new_prompt:
+        target_scene["prompt_imagen"] = req.new_prompt
+    if req.new_text:
+        target_scene["texto"] = req.new_text
+
+    from src.api_clients import ElevenLabsClient, NvidiaImageClient
+    elevenlabs_key = os.getenv("ELEVENLABS_API_KEY", "")
+    elevenlabs_voice = os.getenv("ELEVENLABS_VOICE_ID", "pNInz6obpgq5okZXeOhx")
+    nvidia_key = os.getenv("NVIDIA_IMAGE_KEY") or os.getenv("NVIDIA_API_KEY", "")
+    nvidia_model = os.getenv("NVIDIA_IMAGE_MODEL", "black-forest-labs/flux.2-klein-4b")
+
+    audio_path = os.path.join(target_dir, f"audios/escena_{req.numero_escena:02d}.mp3")
+    image_path = os.path.join(target_dir, f"imagenes/escena_{req.numero_escena:02d}.png")
+    prompt_path = os.path.join(target_dir, f"imagenes/prompt_{req.numero_escena:02d}.txt")
+
+    results = {}
+    
+    with open(prompt_path, "w", encoding="utf-8") as f:
+        f.write(target_scene["prompt_imagen"])
+
+    if req.mode in ["audio", "both"] and elevenlabs_key:
+        try:
+            tts_client = ElevenLabsClient(elevenlabs_key, elevenlabs_voice)
+            await tts_client.text_to_speech(target_scene["texto"], audio_path)
+            results["audio"] = "OK"
+        except Exception as e:
+            logger.error(f"Error al regenerar audio de escena {req.numero_escena}: {e}")
+            results["audio"] = f"Error: {e}"
+            
+    if req.mode in ["image", "both"] and nvidia_key:
+        try:
+            img_client = NvidiaImageClient(nvidia_key, nvidia_model)
+            await img_client.generate_image(target_scene["prompt_imagen"], image_path)
+            results["image"] = "OK"
+        except Exception as e:
+            logger.error(f"Error al regenerar imagen de escena {req.numero_escena}: {e}")
+            results["image"] = f"Error: {e}"
+
+    with open(escaleta_path, "w", encoding="utf-8") as f:
+        json.dump(escaleta, f, indent=2, ensure_ascii=False)
+
+    return {
+        "status": "success",
+        "message": f"Escena {req.numero_escena} actualizada correctamente.",
+        "results": results,
+        "scene": target_scene
+    }
 
 if __name__ == "__main__":
     import uvicorn
