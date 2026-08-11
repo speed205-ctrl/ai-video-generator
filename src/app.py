@@ -124,6 +124,7 @@ class SaveTempScriptRequest(BaseModel):
 class ApiTestRequest(BaseModel):
     key: Optional[str] = None
     service: str  # "llm", "image", "elevenlabs"
+    model: Optional[str] = None
 
 class ConfigModel(BaseModel):
     OPENROUTER_API_KEY: str
@@ -1259,15 +1260,17 @@ async def probar_api_llm(req: ApiTestRequest):
 
     start = time.time()
     try:
+        user_model = (req.model or "").strip()
         if key.startswith("nvapi-"):
-            client = LLMClient(api_key=key, base_url="https://integrate.api.nvidia.com/v1", default_model="meta/llama-3.1-70b-instruct")
+            target_model = user_model or os.getenv("NVIDIA_MODEL", "").strip() or "meta/llama-3.1-70b-instruct"
+            client = LLMClient(api_key=key, base_url="https://integrate.api.nvidia.com/v1", default_model=target_model)
         else:
-            model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-lite-001")
-            client = LLMClient(api_key=key, base_url="https://openrouter.ai/api/v1", default_model=model)
+            target_model = user_model or os.getenv("OPENROUTER_MODEL", "").strip() or "google/gemini-2.0-flash-lite-001"
+            client = LLMClient(api_key=key, base_url="https://openrouter.ai/api/v1", default_model=target_model)
         
         res = await client.generate_chat("Responde solo OK", "Ping")
         latency = int((time.time() - start) * 1000)
-        return {"status": "success", "mensaje": f"Conexión exitosa ({latency}ms)", "latencia_ms": latency, "respuesta": res[:50]}
+        return {"status": "success", "mensaje": f"Conexión exitosa ({latency}ms) [Modelo: {target_model}]", "latencia_ms": latency, "respuesta": res[:50]}
     except Exception as e:
         return {"status": "error", "mensaje": f"Error de conexión: {str(e)}"}
 
@@ -1283,12 +1286,14 @@ async def probar_api_image(req: ApiTestRequest):
     if not key:
         return {"status": "error", "mensaje": "Escribe tu clave API de NVIDIA Flux para probar."}
 
+    user_image_model = (req.model or "").strip() or os.getenv("NVIDIA_IMAGE_MODEL", "").strip() or "black-forest-labs/flux-1-schnell"
+
     start = time.time()
     try:
         from src.api_clients import NvidiaImageClient
-        client = NvidiaImageClient(api_key=key)
+        client = NvidiaImageClient(api_key=key, default_model=user_image_model)
         latency = int((time.time() - start) * 1000)
-        return {"status": "success", "mensaje": f"Clave válida para NVIDIA Flux ({latency}ms)", "latencia_ms": latency}
+        return {"status": "success", "mensaje": f"Clave válida para Flux ({latency}ms) [Modelo: {user_image_model}]", "latencia_ms": latency}
     except Exception as e:
         return {"status": "error", "mensaje": f"Error en la clave Flux: {str(e)}"}
 

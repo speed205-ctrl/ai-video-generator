@@ -111,10 +111,10 @@ class LLMClient:
 
         if api_key.startswith("nvapi-"):
             self.base_url = "https://integrate.api.nvidia.com/v1"
-            self.default_model = default_model if (default_model and not default_model.startswith("meta-llama/")) else "meta/llama-3.1-70b-instruct"
+            self.default_model = default_model or "meta/llama-3.1-70b-instruct"
         else:
             self.base_url = base_clean
-            self.default_model = default_model
+            self.default_model = default_model or "google/gemini-2.0-flash-lite-001"
         self.local_fallback = LocalOllamaClient() if enable_local_fallback else None
 
     async def _raw_generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: Optional[int] = None) -> str:

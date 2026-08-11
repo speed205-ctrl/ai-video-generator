@@ -524,21 +524,24 @@
       statusEl.textContent = 'Probando conexión...';
 
       let key = '';
+      let model = '';
       let endpoint = `/api/probar-api/${service}`;
 
       if (service === 'llm') {
-        key = document.getElementById('cfg-nvidia-key').value.trim() || document.getElementById('cfg-openrouter-key').value.trim();
+        key = getValue('cfg-nvidia-key') || getValue('cfg-openrouter-key');
+        model = getValue('cfg-nvidia-model') || getValue('cfg-openrouter-model');
       } else if (service === 'elevenlabs') {
-        key = document.getElementById('cfg-elevenlabs-key').value.trim();
+        key = getValue('cfg-elevenlabs-key');
       } else if (service === 'image') {
-        key = document.getElementById('cfg-nvidia-image-key').value.trim() || document.getElementById('cfg-nvidia-key').value.trim();
+        key = getValue('cfg-nvidia-image-key') || getValue('cfg-nvidia-key');
+        model = getValue('cfg-nvidia-image-model');
       }
 
       try {
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: key, service: service })
+          body: JSON.stringify({ key: key, service: service, model: model })
         });
         const data = await res.json();
         if (data.status === 'success') {
