@@ -730,6 +730,56 @@ def build_fact_enriched_mock_script(tema: str, duracion: int, parte: str = "sing
                     "Y mientras observas las fotografías sumergidas del HMS Erebus descubierto en dos mil catorce, el silencio del Ártico sigue guardando el secreto."
                 )
 
+    elif "hierro" in t_lower or "mascara" in t_lower or "máscara" in t_lower:
+        if parte == "part1":
+            return (
+                "Sientes el peso del terciopelo negro y las bisagras de metal helado cubriéndote el rostro. Es julio de mil seiscientos sesenta y nueve.\n"
+                "Por orden secreta e incondicional del rey Luis catorce de Francia, un prisionero anónimo es conducido bajo custodia militar a la fortaleza de Pignerol.\n"
+                "Las instrucciones del ministro de guerra a su carcelero, Benigno de Saint-Mars, son inflexibles: si el prisionero habla con alguien sobre su identidad, será ejecutado de inmediato.\n"
+                "Nadie conoce su rostro ni su verdadero nombre. Pero los rumores en Versalles susurran que comparte la misma sangre real del Rey Sol...\n"
+                "Sígueme ahora mismo para ver la Parte 2."
+            )
+        elif parte == "part2":
+            return (
+                "Continuamos en las sombras de la Francia de mil seiscientos noventa y ocho. El carcelero Saint-Mars es nombrado gobernador de la legendaria prisión de la Bastilla en París.\n"
+                "Consigo traslada a su prisionero más valioso, quien viaja en un carruaje blindado cubriendo su rostro con una máscara ajustada de terciopelo y refuerzos de hierro.\n"
+                "Los guardias tienen orden estricta de mantener las armas cargadas apuntando a su celda. El prisionero recibe trato de alta nobleza: vajilla de plata, telas finas y médicos privados.\n"
+                "Pero las paredes de piedra guardan un secreto que amenazaba la legitimidad del trono francés...\n"
+                "Sígueme para ver la Parte 3 y la revelación final."
+            )
+        elif parte == "part3":
+            return (
+                "Llegamos al desenlace del Hombre de la Máscara de Hierro. El diecinueve de noviembre de mil setecientos tres, el prisionero misterioso fallece repentinamente en la Bastilla.\n"
+                "Fue sepultado bajo la identidad falsa de Marchioly. Por orden directa de la corona, sus ropas fueron quemadas, su vajilla fundida y las paredes de su celda raspadas para borrar cualquier inscripción.\n"
+                "Historiadores como Voltaire sostuvieron la teoría de que se trataba del hermano gemelo mayor de Luis catorce, ocultado para evitar una guerra civil por la corona.\n"
+                "Y al revisar los archivos de la Bastilla tres siglos después, el verdadero nombre del hombre detrás del metal sigue siendo el secreto mejor guardado de la monarquía."
+            )
+        else:
+            if duracion == 5:
+                return (
+                    "Sientes el peso del terciopelo negro y las bisagras de metal helado cubriéndote el rostro en completa oscuridad. Es julio de mil seiscientos sesenta y nueve.\n"
+                    "Por orden secreta e incondicional del rey Luis catorce de Francia, un prisionero anónimo es conducido bajo extrema custodia militar a la fortaleza alpina de Pignerol.\n"
+                    "Las instrucciones de la corona a su carcelero, Benigno de Saint-Mars, son absolutas: el cautivo debe permanecer aislado en una celda insonorizada y ser ejecutado de inmediato si pronuncia su verdadero nombre.\n"
+                    "Durante más de tres décadas, el misterioso hombre acompañó a Saint-Mars en sus traslados por las prisiones del reino, desde Exilles hasta las islas de Lérins.\n"
+                    "En mil seiscientos noventa y ocho, el carcelero es nombrado gobernador de la legendaria Bastilla en París. El prisionero es trasladado en un carruaje custodiado por mosqueteros, con su rostro oculto tras una pieza ajustada de metal y terciopelo.\n"
+                    "A pesar de su encierro estricto, el cautivo recibía un trato reservado exclusivamente a príncipes de la sangre: comidas servidas en vajilla de plata fina, ropas de seda y la presencia de los médicos reales.\n"
+                    "Los rumores en las cortes de Europa comenzaron a circular en voz baja. Filósofos como Voltaire afirmaron tras la Revolución que el prisionero no era otro que el hermano gemelo mayor de Luis catorce.\n"
+                    "Otros historiadores sugirieron que se trataba del diplomático italiano Ercole Mattioli o del verdadero padre biológico del monarca, un secreto que habría destruido la dinastía de los Borbones.\n"
+                    "El diecinueve de noviembre de mil setecientos tres, el hombre misterioso falleció de forma repentina tras asistir a la misa en la capilla de la Bastilla.\n"
+                    "Al día siguiente, fue enterrado bajo el nombre ficticio de Marchioly. La corona ordenó quemar todas sus pertenencias personales, derretir sus cubiertos de plata y raspar la pintura de las paredes de su celda hasta dejar la piedra desnuda.\n"
+                    "Tres siglos después, los historiadores han examinado los diarios del teniente de la Bastilla, Etienne du Junca, confirmando la existencia real del prisionero pero no su identidad.\n"
+                    "Y mientras contemplas los fríos muros de piedra de la Bastilla en los mapas de la época, el nombre del hombre que vivió y murió tras la máscara permanece borrado en el tiempo."
+                )
+            else:
+                return (
+                    "Sientes el peso del terciopelo negro y las bisagras de metal helado cubriéndote el rostro. Es julio de mil seiscientos sesenta y nueve.\n"
+                    "Por orden secreta e incondicional del rey Luis catorce de Francia, un prisionero anónimo es conducido bajo custodia militar a la fortaleza de Pignerol.\n"
+                    "Las instrucciones al carcelero Saint-Mars eran absolutas: si el prisionero revelaba su nombre a los guardias, debía ser ejecutado al instante.\n"
+                    "En mil seiscientos noventa y mecho fue trasladado a la Bastilla en París con el rostro siempre cubierto. A pesar del encierro, recibía trato de alta nobleza y vajilla de plata.\n"
+                    "Tras su muerte en mil setecientos tres bajo el nombre falso de Marchioly, la corona ordenó fundir sus pertenencias y quemar su ropa.\n"
+                    "Voltaire afirmó que era el hermano gemelo mayor del rey. Y tres siglos después, el rostro detrás del metal sigue siendo el secreto más oscuro de Versalles."
+                )
+
     # Specific historical facts dictionary
     elif "dyatlov" in t_lower or "paso" in t_lower:
         if parte == "part1":
