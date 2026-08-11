@@ -557,34 +557,9 @@ async def get_history():
     """Returns the list of generated/processing topics."""
     return read_history()
 
-@app.get("/api/config")
-async def get_config():
-    """Returns masked/unmasked config state."""
-    openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
-    nvidia_key = os.getenv("NVIDIA_API_KEY", "")
-    elevenlabs_key = os.getenv("ELEVENLABS_API_KEY", "")
-    nvidia_image_key = os.getenv("NVIDIA_IMAGE_KEY", "")
-    
-    return {
-        "OPENROUTER_API_KEY": "Configurada" if openrouter_key else "",
-        "OPENROUTER_MODEL": os.getenv("OPENROUTER_MODEL", "anthropic/claude-3.5-sonnet"),
-        "NVIDIA_API_KEY": "Configurada" if nvidia_key else "",
-        "NVIDIA_MODEL": os.getenv("NVIDIA_MODEL", "meta/llama-3.1-405b-instruct"),
-        "ELEVENLABS_API_KEY": "Configurada" if elevenlabs_key else "",
-        "ELEVENLABS_VOICE_ID": os.getenv("ELEVENLABS_VOICE_ID", "pNInz6obpgq5okZXeOhx"),
-        "NVIDIA_IMAGE_KEY": "Configurada" if nvidia_image_key else "",
-        "NVIDIA_IMAGE_MODEL": os.getenv("NVIDIA_IMAGE_MODEL", "black-forest-labs/flux.2-klein-4b")
-    }
 
-@app.post("/api/config")
-async def post_config(config: ConfigModel):
-    """Saves the submitted config back to the .env file and hot-reloads it."""
-    try:
-        save_env_config(config.dict())
-        return {"status": "ok", "message": "Configuración guardada e importada en caliente."}
-    except Exception as e:
-        logger.error(f"Error saving API configuration: {e}")
-        raise HTTPException(status_code=500, detail=f"Error al guardar configuración: {e}")
+# NOTE: /api/config GET and POST routes are defined at the bottom of this file
+# with full BASE_URL support for all 3 service providers.
 
 @app.get("/api/ideas")
 async def get_ideas(categoria: Optional[str] = None):
