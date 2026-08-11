@@ -1012,6 +1012,12 @@ async def generar_guion(req: ScriptGenerateRequest):
         logger.error(f"Error generando guion vía LLM ({e}). Usando guion de respaldo enriquecido ({parte})...")
         return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion, parte=parte)}
 
+def slugify(text: str) -> str:
+    import re
+    text = text.lower().strip()
+    text = re.sub(r'[^\w\s-]', '', text)
+    return re.sub(r'[\s_-]+', '_', text).strip('_') or "guion"
+
 @app.post("/api/guardar-guion-temp")
 async def guardar_guion_temp(req: SaveTempScriptRequest):
     tema = req.tema.strip()
@@ -1025,7 +1031,6 @@ async def guardar_guion_temp(req: SaveTempScriptRequest):
         os.makedirs(temp_dir, exist_ok=True)
         
         # Create a safe file name based on topic slug
-        from src.main import slugify
         safe_name = f"guion_editado_{slugify(tema)}.txt"
         file_path = os.path.join(temp_dir, safe_name)
         
