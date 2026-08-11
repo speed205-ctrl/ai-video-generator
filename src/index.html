@@ -924,6 +924,14 @@
           writeToTerminal(`[WebSocket Error] ${err.message || 'Error de conexión'}`, 'error');
         };
 
+      } catch (err) {
+        writeToTerminal(`[Error] Fallo al arrancar la producción de video: ${err.message}`, 'error');
+        pulseBadge.classList.add('bg-yellow-500');
+        pulseBadge.classList.remove('bg-red-500');
+      }
+    }
+  </script>
+
   <!-- Scene Edit Modal -->
   <div id="sceneModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
     <div class="glass max-w-2xl w-full rounded-2xl border border-cyan-500/30 p-6 flex flex-col gap-4 shadow-[0_0_50px_rgba(6,182,212,0.15)]">
