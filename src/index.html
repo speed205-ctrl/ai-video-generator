@@ -338,20 +338,15 @@
         <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
           <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase mb-3">2. Agente de Prompts (NVIDIA Cloud)</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA API Key</label>
-              <input type="password" id="cfg-nvidia-key" placeholder="En blanco para simulación o usar OpenRouter" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
-            </div>
-            <div>
-              <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Model</label>
-              <input type="text" id="cfg-nvidia-model" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
-            </div>
-          </div>
-        </div>
-
         <!-- ElevenLabs Settings -->
         <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
-          <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase mb-3">3. Audio Narrador (ElevenLabs)</h4>
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">2. Audio Narrador (ElevenLabs)</h4>
+            <div class="flex items-center gap-2">
+              <span id="test-status-tts" class="text-[10px] font-mono"></span>
+              <button type="button" onclick="testApi('elevenlabs')" class="bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded text-[11px] font-mono transition">🎙️ Probar ElevenLabs</button>
+            </div>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">ElevenLabs API Key</label>
@@ -366,7 +361,13 @@
 
         <!-- NVIDIA Image Settings -->
         <div class="border border-white/5 bg-white/[0.01] p-4 rounded-lg">
-          <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase mb-3">4. Generación Visual (NVIDIA Cloud API)</h4>
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">3. Generación Visual (NVIDIA Cloud API)</h4>
+            <div class="flex items-center gap-2">
+              <span id="test-status-image" class="text-[10px] font-mono"></span>
+              <button type="button" onclick="testApi('image')" class="bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded text-[11px] font-mono transition">🎨 Probar Flux</button>
+            </div>
+          </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">NVIDIA Image API Key</label>
@@ -507,6 +508,44 @@
         generateIdeas();
       } catch (err) {
         alert('Error al guardar ajustes: ' + err.message);
+      }
+    }
+
+    async function testApi(service) {
+      const statusEl = document.getElementById(`test-status-${service}`);
+      if (!statusEl) return;
+
+      statusEl.className = 'text-[10px] font-mono text-yellow-400 animate-pulse';
+      statusEl.textContent = 'Probando conexión...';
+
+      let key = '';
+      let endpoint = `/api/probar-api/${service}`;
+
+      if (service === 'llm') {
+        key = document.getElementById('cfg-nvidia-key').value.trim() || document.getElementById('cfg-openrouter-key').value.trim();
+      } else if (service === 'elevenlabs') {
+        key = document.getElementById('cfg-elevenlabs-key').value.trim();
+      } else if (service === 'image') {
+        key = document.getElementById('cfg-nvidia-image-key').value.trim() || document.getElementById('cfg-nvidia-key').value.trim();
+      }
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: key, service: service })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          statusEl.className = 'text-[10px] font-mono text-emerald-400 font-bold';
+          statusEl.textContent = '🟢 ' + data.mensaje;
+        } else {
+          statusEl.className = 'text-[10px] font-mono text-red-400 font-bold';
+          statusEl.textContent = '🔴 ' + data.mensaje;
+        }
+      } catch (err) {
+        statusEl.className = 'text-[10px] font-mono text-red-400 font-bold';
+        statusEl.textContent = '🔴 Error: ' + err.message;
       }
     }
 

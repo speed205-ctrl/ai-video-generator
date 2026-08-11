@@ -121,6 +121,10 @@ class SaveTempScriptRequest(BaseModel):
     tema: str
     guion: str
 
+class ApiTestRequest(BaseModel):
+    key: Optional[str] = None
+    service: str  # "llm", "image", "elevenlabs"
+
 class ConfigModel(BaseModel):
     OPENROUTER_API_KEY: str
     OPENROUTER_MODEL: str
@@ -1240,6 +1244,70 @@ async def regenerate_single_scene(req: RegenerateSceneRequest):
         "results": results,
         "scene": target_scene
     }
+
+@app.post("/api/probar-api/llm")
+async def probar_api_llm(req: ApiTestRequest):
+    import time
+    key = (req.key or "").strip() or os.getenv("NVIDIA_API_KEY", "").strip() or os.getenv("OPENROUTER_API_KEY", "").strip()
+    if not key:
+        return {"status": "error", "mensaje": "No se proporcionó ninguna clave API de LLM."}
+
+    start = time.time()
+    try:
+        if key.startswith("nvapi-"):
+            client = LLMClient(api_key=key, base_url="https://integrate.api.nvidia.com/v1", default_model="meta/llama-3.1-405b-instruct")
+        else:
+            client = LLMClient(api_key=key, base_url="https://openrouter.ai/api/v1", default_model="meta-llama/llama-3.1-405b-instruct")
+        
+        res = await client.generate_chat("Responde solo OK", "Ping", max_tokens=5)
+        latency = int((time.time() - start) * 1000)
+        return {"status": "success", "mensaje": f"Conexión exitosa ({latency}ms)", "latencia_ms": latency, "respuesta": res[:50]}
+    except Exception as e:
+        return {"status": "error", "mensaje": f"Error de conexión: {str(e)}"}
+
+@app.post("/api/probar-api/image")
+async def probar_api_image(req: ApiTestRequest):
+    import time
+    key = (req.key or "").strip() or os.getenv("NVIDIA_API_KEY", "").strip()
+    if not key:
+        return {"status": "error", "mensaje": "No se proporcionó clave API de NVIDIA Flux."}
+
+    start = time.time()
+    try:
+        from src.api_clients import NvidiaImageClient
+        client = NvidiaImageClient(api_key=key)
+        latency = int((time.time() - start) * 1000)
+        return {"status": "success", "mensaje": f"Clave válida para NVIDIA Flux ({latency}ms)", "latencia_ms": latency}
+    except Exception as e:
+        return {"status": "error", "mensaje": f"Error en la clave Flux: {str(e)}"}
+
+@app.post("/api/probar-api/elevenlabs")
+async def probar_api_elevenlabs(req: ApiTestRequest):
+    import time
+    import httpx
+    key = (req.key or "").strip() or os.getenv("ELEVENLABS_API_KEY", "").strip()
+    if not key:
+        return {"status": "error", "mensaje": "No se proporcionó clave API de ElevenLabs."}
+
+    start = time.time()
+    try:
+        async with httpx.AsyncClient() as http:
+            r = await http.get("https://api.elevenlabs.io/v1/user", headers={"xi-api-key": key}, timeout=10.0)
+            if r.status_code == 200:
+                data = r.json()
+                sub = data.get("subscription", {})
+                chars = sub.get("character_count", 0)
+                limit = sub.get("character_limit", 0)
+                latency = int((time.time() - start) * 1000)
+                return {
+                    "status": "success",
+                    "mensaje": f"Conexión exitosa. Caracteres usados: {chars}/{limit} ({latency}ms)",
+                    "latencia_ms": latency
+                }
+            else:
+                return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: Clave de ElevenLabs rechazada."}
+    except Exception as e:
+        return {"status": "error", "mensaje": f"Error de conexión con ElevenLabs: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn
