@@ -180,7 +180,7 @@ class PromptDirectorAgent:
             "Tu misión es segmentar el guion narrativo que se te provea en escenas, creando prompts visuales específicos "
             "y seleccionando efectos de animación.\n\n"
             "REGLAS DE DIRECCIÓN Y SEGMENTACIÓN:\n"
-            f"1. Segmenta el guion en escenas lógicas. La cantidad total NO debe exceder {max_scenes} escenas.\n"
+            f"1. Segmenta el guion de forma ORGÁNICA y EFICIENTE. Crea ÚNICAMENTE las escenas estrictamente necesarias para sostener la narrativa visual (calcula aproximadamente 1 escena por cada 15 a 25 palabras de locución, permitiendo que cada imagen se mantenga en pantalla entre 5 y 7 segundos con su movimiento de cámara correspondiente). NO dividas oraciones cortas en múltiples escenas innecesarias ni generes imágenes redundantes. La cantidad total para este guion NO debe exceder {max_scenes} escenas bajo ninguna circunstancia.\n"
             "2. Para cada escena, define:\n"
             "   - 'texto': El fragmento exacto o resumido del guion que se narrará en esta escena.\n"
             "   - 'prompt_imagen': Un prompt visual ultra-descriptivo y evocador en inglés para lograr los mejores resultados en el modelo de generación.\n"

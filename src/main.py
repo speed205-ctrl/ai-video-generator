@@ -738,10 +738,13 @@ async def main_async(args):
             }
         ]
     else:
-        director_agent = PromptDirectorAgent(director_client, max_scenes=max_scenes)
+        word_count = len(script_text.split())
+        calculated_scenes = max(5, min(max_scenes, word_count // 18))
+        logger.info(f"Conteo de palabras del guion: {word_count}. Límite dinámico optimizado de escenas: {calculated_scenes} (Ahorro de API).")
+        director_agent = PromptDirectorAgent(director_client, max_scenes=calculated_scenes)
         try:
             scenes = await director_agent.segment_script(script_text)
-            logger.info(f"Segmentación completada. Se generaron {len(scenes)} escenas.")
+            logger.info(f"Segmentación completada. Se generaron {len(scenes)} escenas de forma orgánica.")
         except Exception as e:
             logger.error(f"Error en Agente de Prompts: {e}")
             sys.exit(1)
