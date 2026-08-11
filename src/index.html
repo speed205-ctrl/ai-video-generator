@@ -88,7 +88,7 @@
         <span>🤖 IA Autónoma en Vivo + Auto-Caché</span>
       </div>
       <button 
-        onclick="toggleSettings()" 
+        onclick="openSettingsModal()" 
         class="glass hover:bg-white/10 text-cyan-400 px-3 py-1.5 rounded-lg text-xs font-mono transition-all border border-cyan-500/20 hover:border-cyan-500/50"
       >
         Configurar APIs
@@ -429,6 +429,10 @@
     window.onload = function() {
       fetchHistory();
     };
+
+    function toggleSettings() {
+      openSettingsModal();
+    }
 
     async function openSettingsModal() {
       try {
