@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import base64
 import re
@@ -6,6 +7,11 @@ import asyncio
 import aiohttp
 import logging
 from typing import Dict, Any, Optional
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 logger = logging.getLogger(__name__)
 
@@ -19,17 +25,17 @@ async def _async_retry(coro_func, *args, max_retries: int = 4, initial_delay: fl
         try:
             return await coro_func(*args, **kwargs)
         except Exception as e:
-            err_str = str(e)
+            err_str = str(e) if str(e) else repr(e)
             # Unrecoverable error statuses
             if "status 402" in err_str or "status 401" in err_str or "CONTENT_FILTERED" in err_str:
                 logger.warning(f"Unrecoverable error encountered ({err_str}), skipping retries.")
                 raise e
             
             if attempt == max_retries:
-                logger.error(f"Max retries ({max_retries}) reached. Error: {e}")
+                logger.error(f"Max retries ({max_retries}) reached. Error: {err_str}")
                 raise e
             
-            logger.warning(f"Attempt {attempt}/{max_retries} failed ({e}). Retrying in {delay:.1f}s...")
+            logger.warning(f"Attempt {attempt}/{max_retries} failed ({err_str}). Retrying in {delay:.1f}s...")
             await asyncio.sleep(delay)
             delay *= 2.0
 

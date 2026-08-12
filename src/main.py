@@ -19,6 +19,11 @@ import numpy as np
 import cv2
 from PIL import Image
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # Setup Logging
 logging.basicConfig(
     level=logging.INFO,
@@ -47,9 +52,9 @@ def format_timestamp(seconds: float) -> str:
     return f"{mins:02d}:{secs:02d}.{millis:02d}"
 
 async def process_scene(scene_data: dict, output_dir: str, tts_client, image_client, sem: asyncio.Semaphore, mock_mode: bool = False, aspect_ratio: str = "16:9") -> dict:
-    scene_num = scene_data["numero_escena"]
-    scene_text = scene_data["texto"]
-    scene_prompt = scene_data["prompt_imagen"]
+    scene_num = scene_data.get("numero_escena") or scene_data.get("numero", 1)
+    scene_text = scene_data.get("texto", "")
+    scene_prompt = scene_data.get("prompt_imagen", "")
     scene_effect = scene_data.get("efecto_capcut", "zoom_in")
     
     audio_filename = f"escena_{scene_num:02d}.mp3"

@@ -1428,5 +1428,5 @@ async def save_config(req: SaveConfigRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Start the server on port 8000
-    uvicorn.run("src.app:app", host="127.0.0.1", port=8000, reload=True)
+    # Start the server on port 8000 without file watcher reloading to prevent restarts on file generation
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=False)
