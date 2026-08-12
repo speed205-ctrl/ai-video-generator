@@ -150,19 +150,47 @@ class LLMClient:
                 result = await response.json()
                 return result["choices"][0]["message"]["content"]
 
+    # Prioritized model pool for automatic failover when a model is overloaded, rate-limited, or timing out
+    DEFAULT_NVIDIA_POOL = [
+        "z-ai/glm-5.2",
+        "meta/llama-3.3-70b-instruct",
+        "meta/llama-3.1-70b-instruct",
+        "meta/llama-3.2-3b-instruct",
+        "google/gemma-4-31b-it"
+    ]
+
     async def generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: Optional[int] = None) -> str:
-        try:
-            return await _async_retry(
-                self._raw_generate_chat, system_prompt, user_prompt, model=model, temperature=temperature, max_tokens=max_tokens
-            )
-        except Exception as e:
-            if self.local_fallback:
-                logger.warning(f"Cloud LLM API failed ({e}). Attempting local Ollama fallback...")
-                try:
-                    return await self.local_fallback.generate_chat(system_prompt, user_prompt, temperature=temperature)
-                except Exception as local_e:
-                    logger.error(f"Local Ollama fallback also failed: {local_e}")
-            raise e
+        # Build sequence of models to attempt: requested model first, then the remaining models from the pool
+        requested_model = model or self.default_model
+        model_queue = [requested_model]
+        for m in self.DEFAULT_NVIDIA_POOL:
+            if m not in model_queue:
+                model_queue.append(m)
+
+        last_exception = None
+        for attempt_idx, current_model in enumerate(model_queue):
+            try:
+                if attempt_idx > 0:
+                    logger.warning(f"🤖 [Model Rotation Agent] Conmutando a modelo de respaldo ({attempt_idx}/{len(model_queue) - 1}): {current_model}")
+                
+                return await _async_retry(
+                    self._raw_generate_chat, system_prompt, user_prompt, model=current_model, temperature=temperature, max_tokens=max_tokens, max_retries=2
+                )
+            except Exception as e:
+                last_exception = e
+                logger.warning(f"⚠️ [Model Rotation Agent] Modelo '{current_model}' presentó error/lentitud: {e}")
+                continue
+
+        # If all cloud models in pool failed, try local Ollama if enabled
+        if self.local_fallback:
+            logger.warning(f"Todos los modelos de la nube fallaron ({last_exception}). Intentando respaldo local Ollama...")
+            try:
+                return await self.local_fallback.generate_chat(system_prompt, user_prompt, temperature=temperature)
+            except Exception as local_e:
+                logger.error(f"El respaldo local Ollama también falló: {local_e}")
+        
+        raise last_exception or Exception("Todos los modelos del pool de rotación fallaron.")
+
 
 
 class ElevenLabsClient:
