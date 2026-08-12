@@ -307,7 +307,8 @@ def render_scene_subclip(scene: dict, output_dir: str, temp_dir: str) -> dict:
             image_clip = image_clip.set_duration(audio_clip.duration)
             
         efecto = scene.get("efecto_capcut", "Zoom in")
-        text_to_draw = scene.get("texto", "") if scene.get("subtitulos", False) else None
+        # Subtítulos quemados automáticos desactivados por defecto (se exportan en .srt / CapCut)
+        text_to_draw = None
         animated_clip = apply_dynamic_effect(image_clip, efecto, text_to_draw)
             
         if hasattr(animated_clip, "with_audio"):
