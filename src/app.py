@@ -1611,20 +1611,36 @@ async def probar_api_huggingface(req: ApiTestRequest):
     if not key:
         return {"status": "error", "mensaje": "Ingresa tu Token de acceso de Hugging Face (hf_...)"}
 
-    model_name = (req.model or "").strip() or os.getenv("HUGGINGFACE_IMAGE_MODEL", "black-forest-labs/FLUX.1-schnell")
+    model_name = (req.model or "").strip() or os.getenv("HUGGINGFACE_IMAGE_MODEL", "stabilityai/stable-diffusion-xl-base-1.0")
     url = f"https://router.huggingface.co/hf-inference/models/{model_name}"
 
     start = time.time()
     try:
         async with httpx.AsyncClient() as http:
             headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-            r = await http.post(url, headers=headers, json={"inputs": "test airplane"}, timeout=20.0)
+            r = await http.post(url, headers=headers, json={"inputs": "test airplane"}, timeout=25.0)
             latency = int((time.time() - start) * 1000)
             if r.status_code == 200:
                 return {
                     "status": "success",
                     "mensaje": f"Conexión exitosa con Hugging Face ({model_name}) - {latency}ms",
                     "latencia_ms": latency
+                }
+            elif r.status_code == 503:
+                return {
+                    "status": "success",
+                    "mensaje": f"Token Válido. El modelo ({model_name}) se está iniciando en servidores de Hugging Face.",
+                    "latencia_ms": latency
+                }
+            elif r.status_code == 403:
+                return {
+                    "status": "error",
+                    "mensaje": "Falta Permiso: En huggingface.co/settings/tokens, crea un Token marcando 'Make calls to Inference Providers' (o rol Write)."
+                }
+            elif r.status_code == 400 and "not supported" in r.text.lower():
+                return {
+                    "status": "error",
+                    "mensaje": f"Modelo no soportado. Prueba con: black-forest-labs/FLUX.1-schnell o stabilityai/stable-diffusion-3.5-large"
                 }
             else:
                 return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: {r.text[:120]}"}
