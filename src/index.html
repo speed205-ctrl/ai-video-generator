@@ -427,7 +427,7 @@
             </div>
             <div>
               <label class="block text-[11px] text-gray-400 font-mono uppercase mb-1">Modelo de Hugging Face</label>
-              <input type="text" id="cfg-huggingface-model" value="black-forest-labs/FLUX.1-schnell" placeholder="black-forest-labs/FLUX.1-schnell" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
+              <input type="text" id="cfg-huggingface-model" value="stabilityai/stable-diffusion-xl-base-1.0" placeholder="stabilityai/stable-diffusion-xl-base-1.0" class="w-full bg-dark-950/80 border border-white/10 rounded px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-cyan-500">
             </div>
           </div>
         </div>
@@ -522,7 +522,7 @@
         setValue('cfg-nvidia-image-model', cfg.NVIDIA_IMAGE_MODEL || 'black-forest-labs/flux-1-schnell');
 
         setValue('cfg-huggingface-key', cfg.HUGGINGFACE_API_KEY, cfg.HUGGINGFACE_API_KEY === 'Configurada' ? 'Token Configurado (Escribe para cambiar)' : 'hf_...');
-        setValue('cfg-huggingface-model', cfg.HUGGINGFACE_IMAGE_MODEL || 'black-forest-labs/FLUX.1-schnell');
+        setValue('cfg-huggingface-model', cfg.HUGGINGFACE_IMAGE_MODEL || 'stabilityai/stable-diffusion-xl-base-1.0');
 
         document.getElementById('settings-modal').classList.remove('hidden');
       } catch (err) {

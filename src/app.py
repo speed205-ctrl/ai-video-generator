@@ -1522,7 +1522,7 @@ async def get_config():
         "NVIDIA_IMAGE_MODEL": sanitize_model_name(os.getenv("NVIDIA_IMAGE_MODEL"), "black-forest-labs/flux-1-schnell"),
 
         "HUGGINGFACE_API_KEY": "Configurada" if (os.getenv("HUGGINGFACE_API_KEY") or os.getenv("HF_TOKEN")) else "",
-        "HUGGINGFACE_IMAGE_MODEL": sanitize_model_name(os.getenv("HUGGINGFACE_IMAGE_MODEL"), "black-forest-labs/FLUX.1-schnell")
+        "HUGGINGFACE_IMAGE_MODEL": sanitize_model_name(os.getenv("HUGGINGFACE_IMAGE_MODEL"), "stabilityai/stable-diffusion-xl-base-1.0")
     }
 
 class SaveConfigRequest(BaseModel):
@@ -1567,7 +1567,7 @@ async def save_config(req: SaveConfigRequest):
         "NVIDIA_IMAGE_BASE_URL": sanitize_model_name(req.NVIDIA_IMAGE_BASE_URL, "https://ai.api.nvidia.com/v1/genai"),
         "NVIDIA_IMAGE_MODEL": sanitize_model_name(req.NVIDIA_IMAGE_MODEL, "black-forest-labs/flux-1-schnell"),
 
-        "HUGGINGFACE_IMAGE_MODEL": sanitize_model_name(req.HUGGINGFACE_IMAGE_MODEL, "black-forest-labs/FLUX.1-schnell")
+        "HUGGINGFACE_IMAGE_MODEL": sanitize_model_name(req.HUGGINGFACE_IMAGE_MODEL, "stabilityai/stable-diffusion-xl-base-1.0")
     }
 
     # Helper for updating or preserving keys
@@ -1600,6 +1600,7 @@ async def save_config(req: SaveConfigRequest):
 
 @app.post("/api/probar-api/huggingface")
 async def probar_api_huggingface(req: ApiTestRequest):
+    import time
     import httpx
     key_input = (req.key or "").strip()
     if not key_input or key_input in ["Configurada", "Token Configurado"]:

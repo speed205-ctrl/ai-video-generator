@@ -300,7 +300,7 @@ class HuggingFaceImageClient:
     """
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
         self.api_key = api_key or os.getenv("HUGGINGFACE_API_KEY", "").strip() or os.getenv("HF_TOKEN", "").strip()
-        self.model = model or os.getenv("HUGGINGFACE_IMAGE_MODEL", "").strip() or "black-forest-labs/FLUX.1-schnell"
+        self.model = model or os.getenv("HUGGINGFACE_IMAGE_MODEL", "").strip() or "stabilityai/stable-diffusion-xl-base-1.0"
 
     async def generate_image(self, prompt: str, output_path: str, aspect_ratio: str = "16:9") -> str:
         if not self.api_key:
@@ -441,7 +441,7 @@ class NvidiaImageClient:
         except Exception as e:
             hf_key = os.getenv("HUGGINGFACE_API_KEY", "").strip() or os.getenv("HF_TOKEN", "").strip()
             if hf_key:
-                hf_model = os.getenv("HUGGINGFACE_IMAGE_MODEL", "black-forest-labs/FLUX.1-schnell").strip()
+                hf_model = os.getenv("HUGGINGFACE_IMAGE_MODEL", "stabilityai/stable-diffusion-xl-base-1.0").strip()
                 logger.warning(f"NVIDIA Image API falló ({e}). Conmutando a Hugging Face API ({hf_model})...")
                 try:
                     hf_client = HuggingFaceImageClient(api_key=hf_key, model=hf_model)
