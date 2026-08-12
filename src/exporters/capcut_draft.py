@@ -76,6 +76,72 @@ class CapCutDraftExporter:
                   "width": self.width
                 })
 
+                efecto = (scene.get("efecto_capcut") or "Zoom in").lower()
+                scale_start, scale_end = 1.0, 1.18
+                pos_x_start, pos_x_end = 0.0, 0.0
+
+                if "out" in efecto:
+                    scale_start, scale_end = 1.18, 1.0
+                elif "right" in efecto or "derecha" in efecto:
+                    scale_start, scale_end = 1.10, 1.10
+                    pos_x_start, pos_x_end = -0.05, 0.05
+                elif "left" in efecto or "izquierda" in efecto:
+                    scale_start, scale_end = 1.10, 1.10
+                    pos_x_start, pos_x_end = 0.05, -0.05
+
+                keyframes_data = [
+                    {
+                        "id": str(uuid.uuid4()),
+                        "keyframe_list": [
+                            {
+                                "curve_type": "Line",
+                                "graph_values": "",
+                                "id": str(uuid.uuid4()),
+                                "left_control": {"x": 0.0, "y": 0.0},
+                                "right_control": {"x": 0.0, "y": 0.0},
+                                "time": 0,
+                                "values": [scale_start, scale_start]
+                            },
+                            {
+                                "curve_type": "Line",
+                                "graph_values": "",
+                                "id": str(uuid.uuid4()),
+                                "left_control": {"x": 0.0, "y": 0.0},
+                                "right_control": {"x": 0.0, "y": 0.0},
+                                "time": dur_us,
+                                "values": [scale_end, scale_end]
+                            }
+                        ],
+                        "property_type": "KFTypeScale"
+                    }
+                ]
+
+                if pos_x_start != 0.0 or pos_x_end != 0.0:
+                    keyframes_data.append({
+                        "id": str(uuid.uuid4()),
+                        "keyframe_list": [
+                            {
+                                "curve_type": "Line",
+                                "graph_values": "",
+                                "id": str(uuid.uuid4()),
+                                "left_control": {"x": 0.0, "y": 0.0},
+                                "right_control": {"x": 0.0, "y": 0.0},
+                                "time": 0,
+                                "values": [pos_x_start, 0.0]
+                            },
+                            {
+                                "curve_type": "Line",
+                                "graph_values": "",
+                                "id": str(uuid.uuid4()),
+                                "left_control": {"x": 0.0, "y": 0.0},
+                                "right_control": {"x": 0.0, "y": 0.0},
+                                "time": dur_us,
+                                "values": [pos_x_end, 0.0]
+                            }
+                        ],
+                        "property_type": "KFTypePosition"
+                    })
+
                 video_segments.append({
                   "id": str(uuid.uuid4()),
                   "material_id": img_material_id,
@@ -88,7 +154,8 @@ class CapCutDraftExporter:
                     "duration": dur_us
                   },
                   "speed": 1.0,
-                  "volume": 1.0
+                  "volume": 1.0,
+                  "common_keyframes": keyframes_data
                 })
 
             # 2. Voice Audio Material & Segment
