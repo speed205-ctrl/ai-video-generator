@@ -14,8 +14,22 @@ from dotenv import load_dotenv
 
 # Set sys.path to resolve relative imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.api_clients import LLMClient
+from src.api_clients import LLMClient, NvidiaImageClient
 from src.agents import IdeaGeneratorAgent
+from src.main import compile_video
+from src.exporters.capcut_draft import CapCutDraftExporter
+
+class RegenerateProjectImagesRequest(BaseModel):
+    folder_name: str
+    aspect_ratio: Optional[str] = "16:9"
+
+class CompileProjectVideoRequest(BaseModel):
+    folder_name: str
+
+class RegenerateSceneImageRequest(BaseModel):
+    folder_name: str
+    scene_number: int
+    custom_prompt: Optional[str] = None
 
 # Load dotenv from project directory
 project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -370,6 +384,45 @@ PROJECT_DETAIL_TEMPLATE = """<!DOCTYPE html>
     <div class="text-xs text-gray-500 font-mono">Proyecto: {folder_name}</div>
   </header>
 
+  <!-- Action Bar for Image Regeneration and Video Re-Rendering -->
+  <div class="glass rounded-xl p-5 glow-border flex flex-wrap justify-between items-center gap-4">
+    <div>
+      <h2 class="text-sm font-semibold uppercase tracking-wider text-cyan-400 font-mono flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+        Panel de Control de Producción y Regeneración
+      </h2>
+      <p class="text-xs text-gray-400 mt-1 font-sans">Regenera imágenes HD con IA o re-compila el video final (.mp4) y borrador de CapCut.</p>
+    </div>
+    
+    <div class="flex items-center gap-3 flex-wrap">
+      <select id="aspect-ratio-select" class="bg-dark-950/80 border border-white/10 text-xs text-gray-300 rounded px-3 py-2 font-mono focus:outline-none focus:border-cyan-500">
+        <option value="16:9">Formato: Horizontal (16:9)</option>
+        <option value="9:16">Formato: Vertical / Short (9:16)</option>
+        <option value="1:1">Formato: Cuadrado (1:1)</option>
+      </select>
+
+      <button onclick="regenerateProjectImages('{folder_name}')" id="btn-regen-images" class="bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-xs font-semibold px-4 py-2 rounded-lg transition duration-200 font-mono flex items-center gap-2 shadow-lg cursor-pointer">
+        <span id="spin-regen" class="hidden animate-spin">&#9696;</span>
+        <span>🖼️ Regenerar Imágenes (AI)</span>
+      </button>
+
+      <button onclick="compileProjectVideo('{folder_name}')" id="btn-render-video" class="bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-300 text-xs font-semibold px-4 py-2 rounded-lg transition duration-200 font-mono flex items-center gap-2 shadow-lg cursor-pointer">
+        <span id="spin-render" class="hidden animate-spin">&#9696;</span>
+        <span>⚡ Renderizar Video (.mp4)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Notification Banner -->
+  <div id="action-status-banner" class="hidden glass border border-cyan-500/30 rounded-xl p-4 text-xs font-mono text-cyan-300 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="animate-pulse text-lg">💡</span>
+      <span id="action-status-text">Procesando solicitud...</span>
+    </div>
+  </div>
+
   <!-- Title & Proposals / YouTube Details -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Left Column: Title Proposals & Thumbnail (2 cols) -->
@@ -441,12 +494,107 @@ PROJECT_DETAIL_TEMPLATE = """<!DOCTYPE html>
       const el = document.getElementById(elementId);
       let text = el.innerText || el.textContent;
       
-      // Copy
       navigator.clipboard.writeText(text).then(() => {
         alert("¡Copiado al portapapeles con éxito!");
       }).catch(err => {
         console.error("Error al copiar: ", err);
       });
+    }
+
+    async function regenerateProjectImages(folderName) {
+      const aspect = document.getElementById("aspect-ratio-select").value;
+      const banner = document.getElementById("action-status-banner");
+      const bannerText = document.getElementById("action-status-text");
+      const btn = document.getElementById("btn-regen-images");
+      const spinner = document.getElementById("spin-regen");
+
+      btn.disabled = true;
+      spinner.classList.remove("hidden");
+      banner.classList.remove("hidden");
+      bannerText.innerText = "Generando nuevas imágenes HD con motor de IA (Pollinations FLUX / NVIDIA)... Por favor espera unos momentos.";
+
+      try {
+        const res = await fetch("/api/regenerate-project-images", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folder_name: folderName, aspect_ratio: aspect })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          bannerText.innerText = "✅ " + data.message;
+          alert("¡Todas las imágenes fueron regeneradas con éxito!\\n\\nHaz clic en '⚡ Renderizar Video (.mp4)' para compilar el video con tus nuevas imágenes.");
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          bannerText.innerText = "❌ Error: " + (data.detail || "Error al regenerar imágenes.");
+        }
+      } catch (err) {
+        bannerText.innerText = "❌ Error de comunicación: " + err.message;
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add("hidden");
+      }
+    }
+
+    async function compileProjectVideo(folderName) {
+      const banner = document.getElementById("action-status-banner");
+      const bannerText = document.getElementById("action-status-text");
+      const btn = document.getElementById("btn-render-video");
+      const spinner = document.getElementById("spin-render");
+
+      btn.disabled = true;
+      spinner.classList.remove("hidden");
+      banner.classList.remove("hidden");
+      bannerText.innerText = "Compilando subclips en GPU, concatenando .mp4 y actualizando borrador de CapCut Desktop...";
+
+      try {
+        const res = await fetch("/api/compile-project-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folder_name: folderName })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          bannerText.innerText = "✅ " + data.message;
+          alert("🎉 ¡Video renderizado exitosamente!\\n\\n🎞️ Video: " + data.video_path + "\\n📂 CapCut Draft: " + data.draft_path);
+        } else {
+          bannerText.innerText = "❌ Error: " + (data.detail || "Error en compilación.");
+        }
+      } catch (err) {
+        bannerText.innerText = "❌ Error de comunicación: " + err.message;
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add("hidden");
+      }
+    }
+
+    async function regenerateSingleSceneImage(folderName, sceneNum) {
+      const banner = document.getElementById("action-status-banner");
+      const bannerText = document.getElementById("action-status-text");
+      const statusSpan = document.getElementById("scene-status-" + sceneNum);
+
+      banner.classList.remove("hidden");
+      bannerText.innerText = "Regenerando imagen de la Escena " + sceneNum + " con IA...";
+      if (statusSpan) statusSpan.innerText = "Generando...";
+
+      try {
+        const res = await fetch("/api/regenerate-scene-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folder_name: folderName, scene_number: sceneNum })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          bannerText.innerText = "✅ Escena " + sceneNum + " regenerada exitosamente.";
+          if (statusSpan) statusSpan.innerText = "✅ Listo";
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          bannerText.innerText = "❌ Error: " + (data.detail || "Error al regenerar escena.");
+          if (statusSpan) statusSpan.innerText = "❌ Error";
+        }
+      } catch (err) {
+        bannerText.innerText = "❌ Error: " + err.message;
+        if (statusSpan) statusSpan.innerText = "❌ Error";
+      }
     }
   </script>
 </body>
@@ -531,6 +679,12 @@ async def get_proyecto_details(folder_name: str):
               <label class="block text-[9px] text-gray-500 font-mono uppercase mb-0.5">Visual Prompt (AI)</label>
               <span class="text-[10px] text-gray-400 leading-snug block line-clamp-2" title="{img_prompt}">{img_prompt}</span>
             </div>
+          </div>
+          <div class="mt-3 pt-2 border-t border-white/5 flex justify-between items-center">
+            <button onclick="regenerateSingleSceneImage('{folder_name}', {num})" id="btn-scene-{num}" class="text-[10px] text-cyan-400 hover:text-cyan-300 font-mono px-2.5 py-1 border border-cyan-500/20 hover:border-cyan-500/50 rounded transition flex items-center gap-1 cursor-pointer">
+              <span>🔄</span> Regenerar Imagen de esta Escena
+            </button>
+            <span id="scene-status-{num}" class="text-[10px] text-gray-500 font-mono"></span>
           </div>
         </div>
         """
@@ -1425,6 +1579,125 @@ async def save_config(req: SaveConfigRequest):
     logger.info("Configuración de APIs guardada y recargada en caliente con éxito.")
 
     return {"status": "success", "message": "Configuración guardada y recargada en caliente correctamente."}
+
+@app.post("/api/regenerate-project-images")
+async def regenerate_project_images_api(req: RegenerateProjectImagesRequest):
+    """Regenerates all scene images for a project in output/."""
+    folder_name = req.folder_name
+    aspect_ratio = req.aspect_ratio or "16:9"
+    target_dir = os.path.join(project_dir, "output", folder_name)
+    if not os.path.exists(target_dir):
+        raise HTTPException(status_code=404, detail=f"No existe el proyecto '{folder_name}' en output/.")
+
+    escaleta_path = os.path.join(target_dir, "escaleta.json")
+    if not os.path.exists(escaleta_path):
+        raise HTTPException(status_code=404, detail=f"No se encontró 'escaleta.json' en '{folder_name}'.")
+
+    try:
+        with open(escaleta_path, "r", encoding="utf-8") as f:
+            escaleta = json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al leer escaleta.json: {e}")
+
+    nvidia_key = os.getenv("NVIDIA_IMAGE_KEY") or os.getenv("NVIDIA_API_KEY") or "key"
+    nvidia_model = os.getenv("NVIDIA_IMAGE_MODEL", "black-forest-labs/flux-1-schnell")
+    client = NvidiaImageClient(api_key=nvidia_key, model=nvidia_model)
+
+    escenas = escaleta.get("escenas", [])
+    if not escenas:
+        raise HTTPException(status_code=400, detail="El proyecto no contiene escenas en la escaleta.")
+
+    sem = asyncio.Semaphore(2)
+
+    async def process_img(scene):
+        num = scene.get("numero_escena") or scene.get("numero", 1)
+        prompt = scene.get("prompt_imagen", "")
+        img_rel = scene.get("imagen_path") or f"imagenes/escena_{num:02d}.png"
+        img_path = os.path.join(target_dir, img_rel)
+        async with sem:
+            await client.generate_image(prompt, img_path, aspect_ratio=aspect_ratio)
+
+    tasks = [process_img(scene) for scene in escenas]
+    await asyncio.gather(*tasks)
+
+    return {
+        "status": "success",
+        "message": f"Se regeneraron exitosamente {len(escenas)} imágenes en formato {aspect_ratio}."
+    }
+
+
+@app.post("/api/compile-project-video")
+async def compile_project_video_api(req: CompileProjectVideoRequest):
+    """Re-compiles the .mp4 video and exports CapCut draft."""
+    folder_name = req.folder_name
+    target_dir = os.path.join(project_dir, "output", folder_name)
+    if not os.path.exists(target_dir):
+        raise HTTPException(status_code=404, detail=f"No existe el proyecto '{folder_name}' en output/.")
+
+    escaleta_path = os.path.join(target_dir, "escaleta.json")
+    if not os.path.exists(escaleta_path):
+        raise HTTPException(status_code=404, detail=f"No se encontró 'escaleta.json' en '{folder_name}'.")
+
+    try:
+        with open(escaleta_path, "r", encoding="utf-8") as f:
+            escaleta = json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al leer escaleta.json: {e}")
+
+    try:
+        video_path = compile_video(target_dir, escaleta)
+        if not video_path:
+            raise HTTPException(status_code=500, detail="Fallo al renderizar el video .mp4 con MoviePy.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en renderizado: {e}")
+
+    draft_path = ""
+    try:
+        exporter = CapCutDraftExporter(aspect_ratio="16:9")
+        draft_path = exporter.export_project(target_dir)
+    except Exception as e:
+        logger.error(f"Error al actualizar borrador en CapCut: {e}")
+
+    return {
+        "status": "success",
+        "message": "Video .mp4 renderizado y borrador de CapCut Desktop actualizado con éxito.",
+        "video_path": video_path,
+        "draft_path": draft_path
+    }
+
+
+@app.post("/api/regenerate-scene-image")
+async def regenerate_scene_image_api(req: RegenerateSceneImageRequest):
+    """Regenerates a single scene image."""
+    folder_name = req.folder_name
+    scene_num = req.scene_number
+    target_dir = os.path.join(project_dir, "output", folder_name)
+    if not os.path.exists(target_dir):
+        raise HTTPException(status_code=404, detail=f"No existe el proyecto '{folder_name}'.")
+
+    escaleta_path = os.path.join(target_dir, "escaleta.json")
+    if not os.path.exists(escaleta_path):
+        raise HTTPException(status_code=404, detail=f"No se encontró 'escaleta.json'.")
+
+    with open(escaleta_path, "r", encoding="utf-8") as f:
+        escaleta = json.load(f)
+
+    escenas = escaleta.get("escenas", [])
+    target_scene = next((s for s in escenas if (s.get("numero_escena") or s.get("numero")) == scene_num), None)
+    if not target_scene:
+        raise HTTPException(status_code=404, detail=f"Escena {scene_num} no encontrada.")
+
+    prompt = req.custom_prompt or target_scene.get("prompt_imagen", "")
+    img_rel = target_scene.get("imagen_path") or f"imagenes/escena_{scene_num:02d}.png"
+    img_path = os.path.join(target_dir, img_rel)
+
+    nvidia_key = os.getenv("NVIDIA_IMAGE_KEY") or os.getenv("NVIDIA_API_KEY") or "key"
+    nvidia_model = os.getenv("NVIDIA_IMAGE_MODEL", "black-forest-labs/flux-1-schnell")
+    client = NvidiaImageClient(api_key=nvidia_key, model=nvidia_model)
+
+    await client.generate_image(prompt, img_path)
+
+    return {"status": "success", "message": f"Imagen de Escena {scene_num} regenerada correctamente."}
 
 if __name__ == "__main__":
     import uvicorn
