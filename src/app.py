@@ -1519,7 +1519,10 @@ async def get_config():
 
         "NVIDIA_IMAGE_KEY": "Configurada" if os.getenv("NVIDIA_IMAGE_KEY") else "",
         "NVIDIA_IMAGE_BASE_URL": sanitize_model_name(os.getenv("NVIDIA_IMAGE_BASE_URL"), "https://ai.api.nvidia.com/v1/genai"),
-        "NVIDIA_IMAGE_MODEL": sanitize_model_name(os.getenv("NVIDIA_IMAGE_MODEL"), "black-forest-labs/flux-1-schnell")
+        "NVIDIA_IMAGE_MODEL": sanitize_model_name(os.getenv("NVIDIA_IMAGE_MODEL"), "black-forest-labs/flux-1-schnell"),
+
+        "HUGGINGFACE_API_KEY": "Configurada" if (os.getenv("HUGGINGFACE_API_KEY") or os.getenv("HF_TOKEN")) else "",
+        "HUGGINGFACE_IMAGE_MODEL": sanitize_model_name(os.getenv("HUGGINGFACE_IMAGE_MODEL"), "black-forest-labs/FLUX.1-schnell")
     }
 
 class SaveConfigRequest(BaseModel):
@@ -1537,6 +1540,9 @@ class SaveConfigRequest(BaseModel):
     NVIDIA_IMAGE_KEY: Optional[str] = ""
     NVIDIA_IMAGE_BASE_URL: Optional[str] = ""
     NVIDIA_IMAGE_MODEL: Optional[str] = ""
+
+    HUGGINGFACE_API_KEY: Optional[str] = ""
+    HUGGINGFACE_IMAGE_MODEL: Optional[str] = ""
 
 @app.post("/api/config")
 async def save_config(req: SaveConfigRequest):
@@ -1559,13 +1565,15 @@ async def save_config(req: SaveConfigRequest):
         "ELEVENLABS_VOICE_ID": sanitize_model_name(req.ELEVENLABS_VOICE_ID, "N2lVS1w4EtoT3dr4eOWO"),
 
         "NVIDIA_IMAGE_BASE_URL": sanitize_model_name(req.NVIDIA_IMAGE_BASE_URL, "https://ai.api.nvidia.com/v1/genai"),
-        "NVIDIA_IMAGE_MODEL": sanitize_model_name(req.NVIDIA_IMAGE_MODEL, "black-forest-labs/flux-1-schnell")
+        "NVIDIA_IMAGE_MODEL": sanitize_model_name(req.NVIDIA_IMAGE_MODEL, "black-forest-labs/flux-1-schnell"),
+
+        "HUGGINGFACE_IMAGE_MODEL": sanitize_model_name(req.HUGGINGFACE_IMAGE_MODEL, "black-forest-labs/FLUX.1-schnell")
     }
 
     # Helper for updating or preserving keys
     def process_key_update(key_name: str, new_val: Optional[str]):
         val = (new_val or "").strip()
-        if val and val != "Configurada":
+        if val and val not in ["Configurada", "Token Configurado"]:
             updates[key_name] = val
         elif val == "":
             updates[key_name] = ""
@@ -1574,6 +1582,7 @@ async def save_config(req: SaveConfigRequest):
     process_key_update("NVIDIA_API_KEY", req.NVIDIA_API_KEY)
     process_key_update("ELEVENLABS_API_KEY", req.ELEVENLABS_API_KEY)
     process_key_update("NVIDIA_IMAGE_KEY", req.NVIDIA_IMAGE_KEY)
+    process_key_update("HUGGINGFACE_API_KEY", req.HUGGINGFACE_API_KEY)
 
     env_vars.update(updates)
 
@@ -1588,6 +1597,38 @@ async def save_config(req: SaveConfigRequest):
     logger.info("Configuración de APIs guardada y recargada en caliente con éxito.")
 
     return {"status": "success", "message": "Configuración guardada y recargada en caliente correctamente."}
+
+@app.post("/api/probar-api/huggingface")
+async def probar_api_huggingface(req: ApiTestRequest):
+    import httpx
+    key_input = (req.key or "").strip()
+    if not key_input or key_input in ["Configurada", "Token Configurado"]:
+        key = os.getenv("HUGGINGFACE_API_KEY", "").strip() or os.getenv("HF_TOKEN", "").strip()
+    else:
+        key = key_input
+
+    if not key:
+        return {"status": "error", "mensaje": "Ingresa tu Token de acceso de Hugging Face (hf_...)"}
+
+    model_name = (req.model or "").strip() or os.getenv("HUGGINGFACE_IMAGE_MODEL", "black-forest-labs/FLUX.1-schnell")
+    url = f"https://router.huggingface.co/hf-inference/models/{model_name}"
+
+    start = time.time()
+    try:
+        async with httpx.AsyncClient() as http:
+            headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+            r = await http.post(url, headers=headers, json={"inputs": "test airplane"}, timeout=20.0)
+            latency = int((time.time() - start) * 1000)
+            if r.status_code == 200:
+                return {
+                    "status": "success",
+                    "mensaje": f"Conexión exitosa con Hugging Face ({model_name}) - {latency}ms",
+                    "latencia_ms": latency
+                }
+            else:
+                return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: {r.text[:120]}"}
+    except Exception as e:
+        return {"status": "error", "mensaje": f"Error de conexión con Hugging Face: {str(e)}"}
 
 @app.post("/api/regenerate-project-images")
 async def regenerate_project_images_api(req: RegenerateProjectImagesRequest):

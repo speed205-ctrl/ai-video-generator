@@ -293,10 +293,55 @@ class PollinationsImageClient:
             raise Exception("No se pudo obtener imagen de Pollinations AI después de varios intentos.")
 
 
+class HuggingFaceImageClient:
+    """
+    Client for Hugging Face Serverless Inference API Image Generation.
+    Supports FLUX.1-schnell, SD 3.5, etc.
+    """
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+        self.api_key = api_key or os.getenv("HUGGINGFACE_API_KEY", "").strip() or os.getenv("HF_TOKEN", "").strip()
+        self.model = model or os.getenv("HUGGINGFACE_IMAGE_MODEL", "").strip() or "black-forest-labs/FLUX.1-schnell"
+
+    async def generate_image(self, prompt: str, output_path: str, aspect_ratio: str = "16:9") -> str:
+        if not self.api_key:
+            raise ValueError("No se configuró HUGGINGFACE_API_KEY en el entorno o interfaz.")
+            
+        model_name = self.model.strip()
+        url = f"https://router.huggingface.co/hf-inference/models/{model_name}"
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "inputs": prompt
+        }
+        
+        logger.info(f"Generando imagen con Hugging Face ({model_name}): {prompt[:60]}...")
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=90)) as response:
+                if response.status != 200:
+                    text_error = await response.text()
+                    logger.error(f"Hugging Face Image Gen Error ({response.status}): {text_error[:200]}")
+                    raise Exception(f"Hugging Face API Error ({response.status}): {text_error[:150]}")
+                
+                image_bytes = await response.read()
+                if len(image_bytes) < 1000:
+                    raise Exception(f"Hugging Face devolvió datos de imagen inválidos ({len(image_bytes)} bytes).")
+                
+                dir_name = os.path.dirname(output_path)
+                if dir_name:
+                    os.makedirs(dir_name, exist_ok=True)
+                with open(output_path, "wb") as f:
+                    f.write(image_bytes)
+                logger.info(f"Imagen guardada exitosamente con Hugging Face en: {output_path}")
+                return output_path
+
+
 class NvidiaImageClient:
     """
     Client for NVIDIA Cloud API Image Generation supporting BFL FLUX and SD 3.5.
-    Supports retries, aspect ratio (16:9 or 9:16), and automatic fallback to Pollinations FLUX and local SD WebUI.
+    Supports retries, aspect ratio (16:9 or 9:16), and automatic fallback to Hugging Face, Pollinations FLUX and local SD WebUI.
     """
     def __init__(self, api_key: str, model: str = "black-forest-labs/flux-1-schnell", default_model: Optional[str] = None, enable_local_fallback: bool = True):
         self.api_key = api_key
@@ -394,7 +439,17 @@ class NvidiaImageClient:
         try:
             return await _async_retry(self._raw_generate_image, prompt, output_path, aspect_ratio=aspect_ratio)
         except Exception as e:
-            logger.warning(f"NVIDIA Image API falló ({e}). Conmutando a motor Pollinations FLUX...")
+            hf_key = os.getenv("HUGGINGFACE_API_KEY", "").strip() or os.getenv("HF_TOKEN", "").strip()
+            if hf_key:
+                hf_model = os.getenv("HUGGINGFACE_IMAGE_MODEL", "black-forest-labs/FLUX.1-schnell").strip()
+                logger.warning(f"NVIDIA Image API falló ({e}). Conmutando a Hugging Face API ({hf_model})...")
+                try:
+                    hf_client = HuggingFaceImageClient(api_key=hf_key, model=hf_model)
+                    return await hf_client.generate_image(prompt, output_path, aspect_ratio=aspect_ratio)
+                except Exception as hf_err:
+                    logger.error(f"Fallo en Hugging Face API: {hf_err}")
+
+            logger.warning(f"Conmutando a motor de respaldo Pollinations FLUX...")
             try:
                 return await self.pollinations_fallback.generate_image(prompt, output_path, aspect_ratio=aspect_ratio)
             except Exception as pol_e:

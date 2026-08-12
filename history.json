@@ -20,11 +20,19 @@
   {
     "tema": "El Vuelo 19 y el Triángulo de las Bermudas",
     "fecha": "2026-08-11",
-    "status": "fallido"
+    "status": "completado",
+    "folder_name": "video_el_vuelo_19_y_el_triangulo_de_las_bermudas_20260811_210632"
   },
   {
     "tema": "La Ciudad Oculta de 01001101",
     "fecha": "2026-08-11",
-    "status": "fallido"
+    "status": "completado",
+    "folder_name": "video_la_ciudad_oculta_de_01001101_20260811_205102"
+  },
+  {
+    "tema": "El Incidente del ReLOD",
+    "fecha": "2026-08-11",
+    "status": "completado",
+    "folder_name": "video_el_incidente_del_relod_20260811_233324"
   }
 ]
