@@ -501,6 +501,15 @@ PROJECT_DETAIL_TEMPLATE = """<!DOCTYPE html>
       });
     }
 
+    async function safeParseJson(response) {
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return { detail: text || response.statusText };
+      }
+    }
+
     async function regenerateProjectImages(folderName) {
       const aspect = document.getElementById("aspect-ratio-select").value;
       const banner = document.getElementById("action-status-banner");
@@ -519,7 +528,7 @@ PROJECT_DETAIL_TEMPLATE = """<!DOCTYPE html>
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ folder_name: folderName, aspect_ratio: aspect })
         });
-        const data = await res.json();
+        const data = await safeParseJson(res);
         if (res.ok) {
           bannerText.innerText = "✅ " + data.message;
           alert("¡Todas las imágenes fueron regeneradas con éxito!\\n\\nHaz clic en '⚡ Renderizar Video (.mp4)' para compilar el video con tus nuevas imágenes.");
@@ -552,7 +561,7 @@ PROJECT_DETAIL_TEMPLATE = """<!DOCTYPE html>
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ folder_name: folderName })
         });
-        const data = await res.json();
+        const data = await safeParseJson(res);
         if (res.ok) {
           bannerText.innerText = "✅ " + data.message;
           alert("🎉 ¡Video renderizado exitosamente!\\n\\n🎞️ Video: " + data.video_path + "\\n📂 CapCut Draft: " + data.draft_path);
@@ -582,7 +591,7 @@ PROJECT_DETAIL_TEMPLATE = """<!DOCTYPE html>
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ folder_name: folderName, scene_number: sceneNum })
         });
-        const data = await res.json();
+        const data = await safeParseJson(res);
         if (res.ok) {
           bannerText.innerText = "✅ Escena " + sceneNum + " regenerada exitosamente.";
           if (statusSpan) statusSpan.innerText = "✅ Listo";
@@ -1607,7 +1616,7 @@ async def regenerate_project_images_api(req: RegenerateProjectImagesRequest):
     if not escenas:
         raise HTTPException(status_code=400, detail="El proyecto no contiene escenas en la escaleta.")
 
-    sem = asyncio.Semaphore(2)
+    sem = asyncio.Semaphore(1)
 
     async def process_img(scene):
         num = scene.get("numero_escena") or scene.get("numero", 1)

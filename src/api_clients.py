@@ -246,9 +246,13 @@ class ElevenLabsClient:
         return await _async_retry(self._raw_text_to_speech, text, output_path, voice_id=voice_id)
 
 
+_POLLINATIONS_LOCK = asyncio.Semaphore(1)
+
+
 class PollinationsImageClient:
     """
     Fallback client using Pollinations AI (FLUX model) for high-definition image generation.
+    Supports rate limiting and retry handling for HTTP 429.
     """
     async def generate_image(self, prompt: str, output_path: str, aspect_ratio: str = "16:9") -> str:
         import urllib.parse
@@ -256,22 +260,37 @@ class PollinationsImageClient:
         encoded_prompt = urllib.parse.quote(prompt)
         url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&model=flux&nologo=true&seed={hash(prompt) % 100000}"
         
-        logger.info(f"Generando imagen con motor de respaldo Pollinations FLUX: {prompt[:60]}...")
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as response:
-                if response.status != 200:
-                    text_error = await response.text()
-                    raise Exception(f"Pollinations AI request failed ({response.status}): {text_error}")
-                image_bytes = await response.read()
-                if len(image_bytes) < 3000:
-                    raise Exception(f"Pollinations AI returned invalid image payload ({len(image_bytes)} bytes).")
-                dir_name = os.path.dirname(output_path)
-                if dir_name:
-                    os.makedirs(dir_name, exist_ok=True)
-                with open(output_path, "wb") as f:
-                    f.write(image_bytes)
-                logger.info(f"Imagen guardada exitosamente en: {output_path}")
-                return output_path
+        async with _POLLINATIONS_LOCK:
+            logger.info(f"Generando imagen con motor Pollinations FLUX: {prompt[:60]}...")
+            max_attempts = 4
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as response:
+                            if response.status == 429:
+                                logger.warning(f"Pollinations AI colada (429), reintentando en 2.5s (Intento {attempt}/{max_attempts})...")
+                                await asyncio.sleep(2.5)
+                                continue
+                            if response.status != 200:
+                                text_error = await response.text()
+                                raise Exception(f"Pollinations AI request failed ({response.status}): {text_error}")
+                            image_bytes = await response.read()
+                            if len(image_bytes) < 3000:
+                                raise Exception(f"Pollinations AI returned invalid image payload ({len(image_bytes)} bytes).")
+                            dir_name = os.path.dirname(output_path)
+                            if dir_name:
+                                os.makedirs(dir_name, exist_ok=True)
+                            with open(output_path, "wb") as f:
+                                f.write(image_bytes)
+                            logger.info(f"Imagen guardada exitosamente en: {output_path}")
+                            await asyncio.sleep(1.0)
+                            return output_path
+                except Exception as e:
+                    if attempt == max_attempts:
+                        raise e
+                    logger.warning(f"Error en intento {attempt} con Pollinations AI: {e}. Reintentando...")
+                    await asyncio.sleep(2.0)
+            raise Exception("No se pudo obtener imagen de Pollinations AI después de varios intentos.")
 
 
 class NvidiaImageClient:
