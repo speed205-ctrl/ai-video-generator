@@ -27,7 +27,7 @@ async def _async_retry(coro_func, *args, max_retries: int = 4, initial_delay: fl
         except Exception as e:
             err_str = str(e) if str(e) else repr(e)
             # Unrecoverable error statuses
-            if "status 402" in err_str or "status 401" in err_str or "CONTENT_FILTERED" in err_str:
+            if "status 402" in err_str or "status 401" in err_str or "status 404" in err_str or "CONTENT_FILTERED" in err_str:
                 logger.warning(f"Unrecoverable error encountered ({err_str}), skipping retries.")
                 raise e
             
@@ -246,15 +246,44 @@ class ElevenLabsClient:
         return await _async_retry(self._raw_text_to_speech, text, output_path, voice_id=voice_id)
 
 
+class PollinationsImageClient:
+    """
+    Fallback client using Pollinations AI (FLUX model) for high-definition image generation.
+    """
+    async def generate_image(self, prompt: str, output_path: str, aspect_ratio: str = "16:9") -> str:
+        import urllib.parse
+        width, height = (576, 1024) if aspect_ratio == "9:16" else (1024, 576)
+        encoded_prompt = urllib.parse.quote(prompt)
+        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&model=flux&nologo=true&seed={hash(prompt) % 100000}"
+        
+        logger.info(f"Generando imagen con motor de respaldo Pollinations FLUX: {prompt[:60]}...")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as response:
+                if response.status != 200:
+                    text_error = await response.text()
+                    raise Exception(f"Pollinations AI request failed ({response.status}): {text_error}")
+                image_bytes = await response.read()
+                if len(image_bytes) < 3000:
+                    raise Exception(f"Pollinations AI returned invalid image payload ({len(image_bytes)} bytes).")
+                dir_name = os.path.dirname(output_path)
+                if dir_name:
+                    os.makedirs(dir_name, exist_ok=True)
+                with open(output_path, "wb") as f:
+                    f.write(image_bytes)
+                logger.info(f"Imagen guardada exitosamente en: {output_path}")
+                return output_path
+
+
 class NvidiaImageClient:
     """
-    Client for NVIDIA Cloud API Image Generation supporting BFL FLUX.2 Klein 4B and SD 3.5 Large.
-    Supports retries, aspect ratio (16:9 or 9:16), and optional fallback to local SD WebUI.
+    Client for NVIDIA Cloud API Image Generation supporting BFL FLUX and SD 3.5.
+    Supports retries, aspect ratio (16:9 or 9:16), and automatic fallback to Pollinations FLUX and local SD WebUI.
     """
     def __init__(self, api_key: str, model: str = "black-forest-labs/flux-1-schnell", default_model: Optional[str] = None, enable_local_fallback: bool = True):
         self.api_key = api_key
         self.model = default_model or model
         self.base_url = "https://ai.api.nvidia.com/v1/genai"
+        self.pollinations_fallback = PollinationsImageClient()
         self.local_fallback = LocalSDWebUIClient() if enable_local_fallback else None
 
     async def _raw_generate_image(self, prompt: str, output_path: str, aspect_ratio: str = "16:9") -> str:
@@ -346,10 +375,14 @@ class NvidiaImageClient:
         try:
             return await _async_retry(self._raw_generate_image, prompt, output_path, aspect_ratio=aspect_ratio)
         except Exception as e:
-            if self.local_fallback:
-                logger.warning(f"Cloud Image API failed ({e}). Attempting local SD WebUI fallback...")
-                try:
-                    return await self.local_fallback.generate_image(prompt, output_path)
-                except Exception as local_e:
-                    logger.error(f"Local SD WebUI fallback also failed: {local_e}")
-            raise e
+            logger.warning(f"NVIDIA Image API falló ({e}). Conmutando a motor Pollinations FLUX...")
+            try:
+                return await self.pollinations_fallback.generate_image(prompt, output_path, aspect_ratio=aspect_ratio)
+            except Exception as pol_e:
+                logger.error(f"Fallo en motor Pollinations FLUX: {pol_e}")
+                if self.local_fallback:
+                    try:
+                        return await self.local_fallback.generate_image(prompt, output_path)
+                    except Exception:
+                        pass
+                raise e
