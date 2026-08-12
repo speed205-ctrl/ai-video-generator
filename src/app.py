@@ -1642,6 +1642,11 @@ async def probar_api_huggingface(req: ApiTestRequest):
                     "status": "error",
                     "mensaje": f"Modelo no soportado. Prueba con: black-forest-labs/FLUX.1-schnell o stabilityai/stable-diffusion-3.5-large"
                 }
+            elif r.status_code == 410:
+                return {
+                    "status": "error",
+                    "mensaje": "Modelo obsoleto en Hugging Face (Deprecated). Cambia el modelo en ajustes a: black-forest-labs/FLUX.1-schnell"
+                }
             else:
                 return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: {r.text[:120]}"}
     except Exception as e:
