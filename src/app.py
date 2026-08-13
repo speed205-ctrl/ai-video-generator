@@ -1139,10 +1139,15 @@ async def generar_guion(req: ScriptGenerateRequest):
 
     openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
     nvidia_key = os.getenv("NVIDIA_API_KEY", "").strip()
-    mock_mode = (not openrouter_key and not nvidia_key) or os.getenv("MOCK_MODE") == "true"
+    
+    if not openrouter_key and not nvidia_key and os.getenv("MOCK_MODE") != "true":
+        raise HTTPException(
+            status_code=400,
+            detail="⚠️ No hay clave de API válida para la Inteligencia Artificial (NVIDIA o OpenRouter). Por favor configura tu API Key en Ajustes ⚙️."
+        )
 
-    if mock_mode:
-        logger.info(f"[Mock] Generando guion enriquecido ({parte}) para {tema} ({duracion} min)...")
+    if os.getenv("MOCK_MODE") == "true":
+        logger.info(f"[Mock] Generando guion de simulación ({parte}) para {tema} ({duracion} min)...")
         return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion, parte=parte)}
 
     try:
@@ -1153,8 +1158,11 @@ async def generar_guion(req: ScriptGenerateRequest):
         save_to_scripts_cache(tema, duracion, parte, script_text)
         return {"tema": tema, "guion": script_text}
     except Exception as e:
-        logger.error(f"Error generando guion vía LLM ({e}). Usando guion de respaldo enriquecido ({parte})...")
-        return {"tema": tema, "guion": build_fact_enriched_mock_script(tema, duracion, parte=parte)}
+        logger.error(f"Error generando guion vía LLM ({e})")
+        raise HTTPException(
+            status_code=502,
+            detail=f"❌ Error de comunicación con la IA de redacción ({str(e)}). Por favor verifica tu API Key o prueba cambiar de modelo en Ajustes."
+        )
 
 def slugify(text: str) -> str:
     import re

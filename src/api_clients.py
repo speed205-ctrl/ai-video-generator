@@ -158,11 +158,10 @@ class LLMClient:
 
     # Prioritized model pool for automatic failover when a model is overloaded, rate-limited, or timing out
     DEFAULT_NVIDIA_POOL = [
-        "z-ai/glm-5.2",
         "meta/llama-3.3-70b-instruct",
         "meta/llama-3.1-70b-instruct",
-        "meta/llama-3.2-3b-instruct",
-        "google/gemma-4-31b-it"
+        "nvidia/llama-3.1-nemotron-70b-instruct",
+        "meta/llama-3.2-3b-instruct"
     ]
 
     async def generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7, max_tokens: Optional[int] = None) -> str:
