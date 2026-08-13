@@ -160,7 +160,6 @@ class LLMClient:
     DEFAULT_NVIDIA_POOL = [
         "meta/llama-3.3-70b-instruct",
         "meta/llama-3.1-70b-instruct",
-        "nvidia/llama-3.1-nemotron-70b-instruct",
         "meta/llama-3.2-3b-instruct"
     ]
 
