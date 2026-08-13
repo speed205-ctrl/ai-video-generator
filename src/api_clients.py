@@ -147,7 +147,7 @@ class LLMClient:
             payload["max_tokens"] = max_tokens
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=90)) as response:
+            async with session.post(url, headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=180)) as response:
                 if response.status != 200:
                     text = await response.text()
                     logger.error(f"LLM API Error (Status {response.status}): {text}")

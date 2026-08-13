@@ -120,6 +120,43 @@ def clean_and_parse_json(text: str) -> Dict[str, Any]:
         raise ValueError(f"JSON parsing error: {e}")
 
 
+async def search_web_context(topic: str) -> str:
+    """
+    Performs real-time web research for the topic using DuckDuckGo HTML API
+    to retrieve recent facts, articles, dates, and technical details.
+    """
+    import asyncio
+    import urllib.request
+    import urllib.parse
+    import re
+
+    try:
+        url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(topic + " historia misterio datos reales")
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
+        def fetch():
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                return resp.read().decode("utf-8", errors="ignore")
+                
+        html = await asyncio.to_thread(fetch)
+        raw_snippets = re.findall(r'class="result__snippet[^>]*>(.*?)</a>', html, re.DOTALL)
+        snippets = []
+        for raw in raw_snippets:
+            clean = re.sub(r'<[^>]+>', '', raw).strip()
+            if clean and len(clean) > 25 and clean not in snippets:
+                snippets.append(clean)
+
+        if snippets:
+            context_text = "\n".join([f"- {s}" for s in snippets[:5]])
+            logger.info(f"🔎 [Búsqueda Web en Vivo] Extraídos {len(snippets[:5])} datos de la red para '{topic}'.")
+            return f"DATOS DE LA RED EN TIEMPO REAL EXTRAÍDOS PARA '{topic}':\n{context_text}\n\n"
+    except Exception as e:
+        logger.warning(f"No se pudo consultar la red en vivo para '{topic}': {e}")
+    return ""
+
+
 class ResearcherWriterAgent:
     """
     Agent responsible for writing historically accurate, high-retention, and dark scripts.
@@ -160,6 +197,9 @@ class ResearcherWriterAgent:
         )
 
     async def write_script(self, topic: str, target_minutes: int = 1, parte_serie: str = "single") -> str:
+        # Step 1: Perform real-time web research
+        web_context = await search_web_context(topic)
+
         word_targets = {
             1: "aproximadamente 160 palabras (para un video de 1 minuto / Reel / Short)",
             2: "aproximadamente 330 palabras (para un video extenso de 2 minutos)",
@@ -189,8 +229,9 @@ class ResearcherWriterAgent:
             f"PROCESO AUTÓNOMO DE INVESTIGACIÓN Y REDACCIÓN PARA EL TEMA: '{topic}'.\n"
             f"DURACIÓN REQUERIDA: {target_minutes} minuto(s) ({word_guide}).\n"
             f"{series_guide}\n\n"
+            f"{web_context}"
             "INSTRUCCIONES DE INVESTIGACIÓN Y REDACCIÓN EN 2 PASOS:\n"
-            "PASO 1 (INVESTIGACIÓN EN BASE DE DATOS/RED): Extrae 5 HECHOS HISTÓRICOS O TÉCNICOS VERÍDICOS Y CONCRETOS sobre este tema específico (ejemplo: fechas exactas, nombres de personas o mandos, lugares geográficos reales, modelos de aeronaves/barcos, coordenadas o transcripciones de radio).\n"
+            "PASO 1 (INVESTIGACIÓN Y EXTRACCIÓN DE DATOS): Revisa los datos de la red provistos o tu base de conocimiento histórico (fechas exactas, nombres de personas o mandos, lugares geográficos reales, modelos de aeronaves/barcos, coordenadas o transcripciones de radio).\n"
             "PASO 2 (REDACCIÓN NARRATIVA): Redacta un guion fascinante en segunda persona ('tú') de aproximadamente 160 palabras (para 1 min / ~1:20m de narración) u 800 palabras (para 5 min), asegurando que la historia TENGA SENTIDO COMPLETO (Inicio -> Desarrollo -> Clímax -> Conclusión).\n\n"
             "Escribe la narración final del guion directamente ahora:"
         )
