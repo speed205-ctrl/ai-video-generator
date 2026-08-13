@@ -325,6 +325,7 @@
             <h4 class="text-xs font-semibold text-cyan-400 font-mono uppercase">1. Agente Redactor Primario (NVIDIA / Cualquier API)</h4>
             <div class="flex items-center gap-2">
               <span id="test-status-llm" class="text-[10px] font-mono"></span>
+              <button type="button" onclick="autoDetectOllama()" class="bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 px-2.5 py-1 rounded text-[11px] font-mono transition flex items-center gap-1">🦙 Auto-Detectar Ollama</button>
               <button type="button" onclick="testApi('llm')" class="bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-400 px-2.5 py-1 rounded text-[11px] font-mono transition">⚡ Probar LLM Primario</button>
             </div>
           </div>
@@ -532,6 +533,45 @@
 
     function closeSettingsModal() {
       document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    async function autoDetectOllama() {
+      const statusEl = document.getElementById('test-status-llm');
+      statusEl.className = "text-[10px] font-mono text-amber-400 animate-pulse";
+      statusEl.innerText = "🔍 Buscando Ollama local...";
+
+      try {
+        const res = await fetch('/api/probar-api/ollama', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: 'http://localhost:11434' })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          // Auto-configure inputs for Ollama Local
+          setValue('cfg-nvidia-url', 'http://localhost:11434/v1');
+          setValue('cfg-nvidia-model', data.modelo_seleccionado || 'gemma4:latest');
+          setValue('cfg-nvidia-key', 'ollama-local');
+
+          setValue('cfg-openrouter-url', 'http://localhost:11434/v1');
+          setValue('cfg-openrouter-model', data.modelo_seleccionado || 'gemma4:latest');
+          setValue('cfg-openrouter-key', 'ollama-local');
+
+          statusEl.className = "text-[10px] font-mono text-emerald-400 font-bold";
+          statusEl.innerText = `✅ Ollama listo (${data.latencia_ms}ms) -> ${data.modelo_seleccionado}`;
+          
+          alert(`🦙 ¡Ollama Local Detectado y Configurado!\n\nModelo listo: ${data.modelo_seleccionado}\nModelos en tu PC: ${data.modelos ? data.modelos.join(', ') : 'OK'}\n\nLos campos se han actualizado a Ollama Local. Haz clic en "Guardar Ajustes".`);
+        } else {
+          statusEl.className = "text-[10px] font-mono text-rose-400";
+          statusEl.innerText = "❌ Ollama no hallado";
+          alert(`❌ No se pudo conectar con Ollama:\n\n${data.mensaje}`);
+        }
+      } catch (err) {
+        statusEl.className = "text-[10px] font-mono text-rose-400";
+        statusEl.innerText = "❌ Error de conexión";
+        alert("Error al conectar con el servidor: " + err.message);
+      }
     }
 
     async function saveSettings() {

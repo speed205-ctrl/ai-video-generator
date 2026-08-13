@@ -137,7 +137,7 @@ class SaveTempScriptRequest(BaseModel):
 
 class ApiTestRequest(BaseModel):
     key: Optional[str] = None
-    service: str  # "llm", "image", "elevenlabs"
+    service: Optional[str] = "llm"
     url: Optional[str] = None
     model: Optional[str] = None
 
@@ -788,10 +788,22 @@ async def delete_ideas_memory():
         raise HTTPException(status_code=500, detail=f"Error al vaciar la memoria: {e}")
 
 
-def get_configured_llm_client() -> LLMClient:
+def get_configured_llm_client() -> Any:
+    use_ollama = os.getenv("USE_OLLAMA", "false").lower() == "true"
+    openrouter_url = os.getenv("OPENROUTER_BASE_URL", "").strip()
+    openrouter_model = os.getenv("OPENROUTER_MODEL", "").strip()
     openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
     nvidia_key = os.getenv("NVIDIA_API_KEY", "").strip()
     
+    if use_ollama or "11434" in openrouter_url or "localhost" in openrouter_url or "127.0.0.1" in openrouter_url:
+        logger.info("🦙 Utilizando motor de IA local de Ollama...")
+        from src.api_clients import LocalOllamaClient
+        target_m = openrouter_model if openrouter_model and not openrouter_model.startswith("meta/") and not openrouter_model.startswith("google/") else None
+        return LocalOllamaClient(
+            base_url="http://localhost:11434",
+            default_model=target_m
+        )
+
     if openrouter_key.startswith("nvapi-"):
         nvidia_key = openrouter_key
         openrouter_key = ""
@@ -804,14 +816,15 @@ def get_configured_llm_client() -> LLMClient:
             default_model=model
         )
     elif nvidia_key:
-        model = os.getenv("NVIDIA_MODEL", "meta/llama-3.1-405b-instruct")
+        model = os.getenv("NVIDIA_MODEL", "meta/llama-3.3-70b-instruct")
         return LLMClient(
             api_key=nvidia_key,
             base_url="https://integrate.api.nvidia.com/v1",
             default_model=model
         )
     else:
-        raise ValueError("No hay clave de API válida de LLM configurada.")
+        from src.api_clients import LocalOllamaClient
+        return LocalOllamaClient(base_url="http://localhost:11434")
 
 def get_cache_filepath():
     data_dir = os.path.join(project_dir, "data")
@@ -1659,6 +1672,39 @@ async def probar_api_huggingface(req: ApiTestRequest):
                 return {"status": "error", "mensaje": f"Código HTTP {r.status_code}: {r.text[:120]}"}
     except Exception as e:
         return {"status": "error", "mensaje": f"Error de conexión con Hugging Face: {str(e)}"}
+
+@app.post("/api/probar-api/ollama")
+async def probar_api_ollama(req: ApiTestRequest):
+    import time
+    from src.api_clients import LocalOllamaClient
+    
+    ollama_url = (req.url or "").strip() or "http://localhost:11434"
+    client = LocalOllamaClient(base_url=ollama_url)
+    
+    start = time.time()
+    try:
+        models = await client.get_available_models()
+        if not models:
+            return {
+                "status": "error",
+                "mensaje": f"Ollama responde en {ollama_url}, pero no hay modelos descargados. Ejecuta 'ollama run gemma2' o 'ollama run llama3.2' en tu terminal."
+            }
+        
+        selected_model = req.model.strip() if req.model and req.model.strip() in models else models[0]
+        latency = int((time.time() - start) * 1000)
+        
+        return {
+            "status": "success",
+            "mensaje": f"🦙 Conectado a Ollama Local ({latency}ms). Modelo: {selected_model} (Disponibles: {', '.join(models)})",
+            "modelos": models,
+            "modelo_seleccionado": selected_model,
+            "latencia_ms": latency
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "mensaje": f"No se pudo conectar a Ollama en {ollama_url}. Revisa que Ollama esté ejecutándose en Windows ({str(e)})."
+        }
 
 @app.post("/api/regenerate-project-images")
 async def regenerate_project_images_api(req: RegenerateProjectImagesRequest):

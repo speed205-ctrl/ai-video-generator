@@ -6,7 +6,7 @@ import re
 import asyncio
 import aiohttp
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -43,29 +43,72 @@ async def _async_retry(coro_func, *args, max_retries: int = 4, initial_delay: fl
 class LocalOllamaClient:
     """
     Fallback client for local Ollama instances (default: http://localhost:11434).
+    Automatically detects available models on localhost if no model is specified.
     """
-    def __init__(self, base_url: str = "http://localhost:11434", default_model: str = "qwen2.5-coder:7b"):
+    def __init__(self, base_url: str = "http://localhost:11434", default_model: Optional[str] = None):
         self.base_url = base_url.rstrip("/")
         self.default_model = default_model
 
+    async def get_available_models(self) -> List[str]:
+        url = f"{self.base_url}/api/tags"
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        models = [m.get("name") for m in data.get("models", []) if m.get("name")]
+                        return models
+        except Exception as e:
+            logger.warning(f"No se pudo consultar /api/tags de Ollama: {e}")
+        return []
+
     async def generate_chat(self, system_prompt: str, user_prompt: str, model: Optional[str] = None, temperature: float = 0.7) -> str:
-        model_name = model or self.default_model
-        url = f"{self.base_url}/v1/chat/completions"
-        payload = {
-            "model": model_name,
+        target_model = model or self.default_model
+        if not target_model:
+            models = await self.get_available_models()
+            if models:
+                target_model = models[0]
+                logger.info(f"🦙 [Ollama Auto-Detect] Modelo seleccionado automáticamente: {target_model}")
+            else:
+                target_model = "gemma4:latest"
+
+        # Attempt 1: OpenAI compatible Chat endpoint (/v1/chat/completions)
+        url_v1 = f"{self.base_url}/v1/chat/completions"
+        payload_v1 = {
+            "model": target_model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
             "temperature": temperature
         }
+        
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=120)) as response:
+            try:
+                async with session.post(url_v1, json=payload_v1, timeout=aiohttp.ClientTimeout(total=180)) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        return result["choices"][0]["message"]["content"]
+            except Exception as v1_err:
+                logger.warning(f"Ollama /v1/chat/completions falló ({v1_err}), probando /api/generate...")
+
+            # Attempt 2: Native Ollama endpoint (/api/generate)
+            url_native = f"{self.base_url}/api/generate"
+            full_prompt = f"{system_prompt}\n\n{user_prompt}"
+            payload_native = {
+                "model": target_model,
+                "prompt": full_prompt,
+                "stream": False,
+                "options": {
+                    "temperature": temperature
+                }
+            }
+            async with session.post(url_native, json=payload_native, timeout=aiohttp.ClientTimeout(total=180)) as response:
                 if response.status != 200:
                     text = await response.text()
-                    raise Exception(f"Local Ollama API error ({response.status}): {text}")
+                    raise Exception(f"Ollama API Error ({response.status}): {text}")
                 result = await response.json()
-                return result["choices"][0]["message"]["content"]
+                return result.get("response", "")
 
 
 class LocalSDWebUIClient:
