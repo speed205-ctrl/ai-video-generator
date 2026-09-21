@@ -51,9 +51,13 @@ ai-video-generator/
 │   └── video_[tema]_[timestamp]/      # Carpeta individual por video (imágenes, audios, escaleta.json, .mp4, .srt)
 │
 ├── .env                               # Credenciales de API y configuración privada (ignorado en git)
+├── .env.example                       # Plantilla de configuración de variables de entorno
 ├── .gitignore                         # Reglas de exclusión de Git
 ├── history.json                       # Base de datos JSON con el historial de producción de la Web UI
 ├── ideas_memory.db                    # Base de datos SQLite para memoria y descarte de ideas ya usadas
+├── requirements.txt                   # Lista de dependencias del proyecto (pip install -r requirements.txt)
+├── run.py                             # Lanzador rápido de la Web UI (python run.py)
+├── start.bat                          # Lanzador en 1-clic para Windows
 └── README.md                          # Documentación oficial del proyecto
 ```
 
@@ -100,45 +104,39 @@ flowchart TD
 3. **CapCut Desktop** (opcional, para editar directamente los borradores generados)
 4. **Ollama** (opcional, si deseas trabajar de forma local y 100% gratuita)
 
-### Configuración del Entorno
-Crea un archivo `.env` en la raíz del proyecto con tus credenciales:
-
-```env
-# Claves de IA de Texto (NVIDIA Cloud, OpenRouter u Ollama)
-NVIDIA_API_KEY=nvapi-...
-NVIDIA_MODEL=meta/llama-3.3-70b-instruct
-
-OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_MODEL=meta/llama-3.3-70b-instruct
-
-# ElevenLabs (Voces Neuronales Ultra-Realistas)
-ELEVENLABS_API_KEY=sk_...
-ELEVENLABS_VOICE_ID=N2lVS1w4EtoT3dr4eOWO
-
-# Generación de Imágenes (NVIDIA Cloud / Hugging Face)
-NVIDIA_IMAGE_KEY=nvapi-...
-NVIDIA_IMAGE_MODEL=flux.1-schnell
-
-HUGGINGFACE_API_KEY=hf_...
-HUGGINGFACE_IMAGE_MODEL=black-forest-labs/FLUX.1-schnell
-
-# Ruta personalizada de borradores de CapCut (Opcional, se auto-detecta)
-CAPCUT_DRAFT_PATH=C:/CapCut Projects/com.lveditor.draft
-```
+### Instalación Rápida
+1. Clona el repositorio:
+   ```powershell
+   git clone https://github.com/speed205-ctrl/ai-video-generator.git
+   cd ai-video-generator
+   ```
+2. Instala las dependencias:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+3. Configura tus credenciales:
+   Copia `.env.example` como `.env` y añade tus claves de API (o usa Ollama localmente sin claves):
+   ```powershell
+   copy .env.example .env
+   ```
 
 ---
 
 ## 🚀 Guía de Uso
 
-### 1. Interfaz Web Interactiva (Recomendado)
-Para iniciar el servidor con consola en vivo, gestión de historial y previsualización de proyectos:
+### 1. Iniciar la Interfaz Web (Recomendado)
+Puedes iniciar la aplicación de cualquiera de las siguientes formas:
 
-```powershell
-python -m src.app
-```
+* **En Windows (1 Clic)**: Haz doble clic en `start.bat`
+* **Desde la terminal**:
+  ```powershell
+  python run.py
+  ```
+  *(o también: `python -m src.app`)*
+
 Luego abre en tu navegador: **`http://localhost:8000`**
 
-* Desde el menú de **Ajustes ⚙️** puedes presionar **`🦙 Auto-Detectar Ollama`** para cambiar instantáneamente entre la nube y tu motor local.
+* Desde el menú de **Ajustes ⚙️** puedes presionar **`🦙 Auto-Detectar Ollama`** para cambiar instantáneamente entre la nube y tu motor local sin necesidad de claves.
 
 ---
 
