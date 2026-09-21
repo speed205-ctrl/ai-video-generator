@@ -26,3 +26,9 @@ prueba_*.mp4
 .venv/
 venv/
 env/
+
+# Additional Secret Protection
+*.key
+*.pem
+*cookies*.json
+session-*
